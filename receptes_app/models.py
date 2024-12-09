@@ -10,6 +10,7 @@ from PIL import Image
 import io
 from django.urls import reverse
 from django_ckeditor_5.fields import CKEditor5Field
+from .services import get_worksheet, imgur_upload, imgur_delete
 
 
 def random_file_name(instance, filename):
@@ -22,7 +23,7 @@ def random_file_name(instance, filename):
     return f"uploads/{random_name}{ext}"  # Store in 'uploads' folder with a random name
 
 
-def resize_image(image, max_size=(800, 800)):
+def resize_image(image, imgur_delete_hash, max_size=(800, 800)):
     """
     Resize the image to a specified max size while maintaining aspect ratio.
     """
@@ -34,11 +35,17 @@ def resize_image(image, max_size=(800, 800)):
 
     # Save the resized image to a bytes buffer
     output = io.BytesIO()
+
     img.save(output, format='JPEG', quality=85)  # You can adjust the quality here
     output.seek(0)
+    success_data = imgur_upload(output, imgur_delete_hash)
+    # print(success_data)
 
     # Create a new InMemoryUploadedFile object with the resized image
-    return InMemoryUploadedFile(output, 'ImageField', image.name, 'image/jpeg', output.tell(), None)
+    try:
+        return success_data['data']['link'], success_data['data']['deletehash']
+    except KeyError:
+        return None
 
 
 class Tag(models.Model):
@@ -65,6 +72,8 @@ class Recipe(models.Model):
     created_at = models.DateField(auto_now_add=True)
     updated_at = models.DateField(auto_now=True)
     image = models.ImageField(upload_to=random_file_name, null=True, blank=True)
+    imgur_image = models.URLField(null=True, blank=True)
+    imgur_delete = models.CharField(max_length=100, null=True, blank=True)
     tags = models.ManyToManyField(Tag, blank=True, related_name="recipes")
     tools = models.ManyToManyField(Tool, blank=True, related_name="recipes")
 
@@ -74,11 +83,40 @@ class Recipe(models.Model):
     def save(self, *args, **kwargs):
         # Check if the image has been uploaded and resize it
         if self.image:
-            self.image = resize_image(self.image)
+            self.imgur_image, self.imgur_delete = resize_image(self.image, self.imgur_delete)
+            self.image = None
+
         self.preparation = self._process_description_links(self.preparation)
         self.ingredients = self._process_description_links(self.ingredients)
 
         super().save(*args, **kwargs)
+
+        worksheet = get_worksheet('ReceptesApp', 'Receptes')
+
+        row_elems = [[self.pk, self.name, self.slug, self.link, self.ingredients, self.preparation, self.prep_time,
+                      self.created_at.strftime("%Y-%m-%d"), self.updated_at.strftime("%Y-%m-%d"),
+                      self.imgur_image if self.imgur_image else '',
+                      "|".join([t.name for t in self.tags.all()]),
+                      "|".join([t.name for t in self.tools.all()]), self.imgur_delete]]
+        found = False
+        for inum, row in enumerate(worksheet.get_all_records(), start=2):
+            if row['pk'] == self.pk:
+                worksheet.update(f"A{inum}", row_elems)
+                found = True
+                break
+        if not found:
+            worksheet.append_rows(row_elems)
+
+
+    def delete(self, *args, **kwargs):
+        worksheet = get_worksheet('ReceptesApp', 'Receptes')
+        for inum, row in enumerate(worksheet.get_all_records(), start=2):
+            if row['pk'] == self.pk:
+                imgur_delete(row['imgur_delete'])
+                worksheet.delete_rows(inum)
+                break
+
+        super().delete(*args, **kwargs)
 
     def get_absolute_url(self):
         return reverse('recipe_detail', kwargs={'pk': self.pk, 'slug': self.slug})
