@@ -1,10 +1,19 @@
 from django.views.generic import ListView, DetailView
 from .models import Tag, Recipe, Menu, Make
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from .services import get_all_rows, get_worksheet, imgur_upload, imgur_delete
 from django.core.paginator import Paginator
 
 all_recipes, all_tags = None, None
+
+def reset_all_recipes(request):
+    global all_recipes
+    global all_tags
+    all_recipes = None
+    all_tags = None
+
+    return redirect('recipe_list')
+
 
 def get_all_recipes():
     global all_recipes
