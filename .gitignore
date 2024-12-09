@@ -1,0 +1,9 @@
+*__init__.py
+*migrations/
+*venv
+*db.sqlite3
+*.idea
+*.env
+*.DS_Store
+media/
+fixtures/
