@@ -24,6 +24,7 @@ requests==2.32.3
 requests-oauthlib==2.0.0
 rsa==4.9
 sqlparse==0.5.2
+tqdm==4.67.1
 typing_extensions==4.12.2
 urllib3==2.2.3
 uvicorn==0.32.1

@@ -121,7 +121,7 @@ class Recipe(models.Model):
     def __str__(self):
         return self.name
 
-    def save(self, *args, skip_action=False, to_db=True, cust_tags=None, cust_tools=None, **kwargs):
+    def save(self, *args, skip_action=False, to_db=True, cust_tags=None, cust_tools=None, request=None, **kwargs):
         # Check if the image has been uploaded and resize it
         if self.image and not skip_action:
             self.imgur_image, self.imgur_delete = resize_image(self.image, self.imgur_delete)
@@ -176,17 +176,16 @@ class Recipe(models.Model):
         """
         Replaces placeholders like [[Recipe Name]] with HTML links to the corresponding recipe.
         """
+        worksheet = get_worksheet('ReceptesApp', 'Receptes')
+        all_rows = worksheet.get_all_records()
 
         def replace_match(match):
             my_slug = match.group(1)
-            try:
-                # Look up the recipe by name
-                linked_recipe = Recipe.objects.get(slug=my_slug)
-                # Create a link to the recipe
-                return f'<a href="{linked_recipe.get_absolute_url()}">{linked_recipe.name}</a>'
-            except Recipe.DoesNotExist:
-                # If no recipe is found, leave the text as it is
-                return match.group(0)
+            for row in all_rows:
+                if row['slug'] == my_slug:
+                    url = os.path.join('https://receptes.onrender.com' + reverse('recipe_detail', kwargs={'pk': row['pk'], 'slug': row['slug']}))
+                    return f'<a href="{url}">{row["name"]}</a>'
+            return match.group(0)
 
         # Use a regular expression to find all [[Recipe Name]] patterns
         return re.sub(r'\[\[(.*?)\]\]', replace_match, text)
