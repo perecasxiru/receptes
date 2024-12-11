@@ -54,12 +54,53 @@ class Tag(models.Model):
     def __str__(self):
         return self.name
 
+    def save(self, *args, skip_action=False, to_db=True, **kwargs):
+        if to_db:
+            super().save(*args, **kwargs)
+
+        if not skip_action:
+            worksheet = get_worksheet('ReceptesApp', 'Tags')
+            all_rows = worksheet.get_all_records()
+            max_pk = max([row['pk'] for row in all_rows], default=0)
+            self.pk = self.pk or max_pk + 1
+            row_elems = [[self.pk, self.name]]
+
+            found = False
+            for inum, row in enumerate(all_rows, start=2):
+                if row['pk'] == self.pk:
+                    worksheet.update(f"A{inum}", row_elems)
+                    found = True
+                    break
+            if not found:
+                worksheet.append_rows(row_elems)
+
 
 class Tool(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, skip_action=False, to_db=True, **kwargs):
+        if to_db:
+            super().save(*args, **kwargs)
+
+        if not skip_action:
+            worksheet = get_worksheet('ReceptesApp', 'Tools')
+            all_rows = worksheet.get_all_records()
+            max_pk = max([row['pk'] for row in all_rows], default=0)
+            self.pk = self.pk or max_pk + 1
+            row_elems = [[self.pk, self.name]]
+
+            found = False
+            for inum, row in enumerate(all_rows, start=2):
+                if row['pk'] == self.pk:
+                    worksheet.update(f"A{inum}", row_elems)
+                    found = True
+                    break
+            if not found:
+                worksheet.append_rows(row_elems)
+
 
 
 class Recipe(models.Model):
@@ -80,33 +121,43 @@ class Recipe(models.Model):
     def __str__(self):
         return self.name
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, skip_action=False, to_db=True, cust_tags=None, cust_tools=None, **kwargs):
         # Check if the image has been uploaded and resize it
-        if self.image:
+        if self.image and not skip_action:
             self.imgur_image, self.imgur_delete = resize_image(self.image, self.imgur_delete)
             self.image = None
 
         self.preparation = self._process_description_links(self.preparation)
         self.ingredients = self._process_description_links(self.ingredients)
 
-        super().save(*args, **kwargs)
+        if to_db:
+            super().save(*args, **kwargs)
+            tags = "|".join([t.name for t in self.tags.all()])
+            tools = "|".join([t.name for t in self.tools.all()])
+        else:
+            tags = "|".join(cust_tags) if cust_tags else ""
+            tools = "|".join(cust_tools) if cust_tags else ""
+            print(tags)
 
-        worksheet = get_worksheet('ReceptesApp', 'Receptes')
+        if not skip_action:
+            worksheet = get_worksheet('ReceptesApp', 'Receptes')
 
-        row_elems = [[self.pk, self.name, self.slug, self.link, self.ingredients, self.preparation, self.prep_time,
-                      self.created_at.strftime("%Y-%m-%d"), self.updated_at.strftime("%Y-%m-%d"),
-                      self.imgur_image if self.imgur_image else '',
-                      "|".join([t.name for t in self.tags.all()]),
-                      "|".join([t.name for t in self.tools.all()]), self.imgur_delete]]
-        found = False
-        for inum, row in enumerate(worksheet.get_all_records(), start=2):
-            if row['pk'] == self.pk:
-                worksheet.update(f"A{inum}", row_elems)
-                found = True
-                break
-        if not found:
-            worksheet.append_rows(row_elems)
+            all_rows = worksheet.get_all_records()
+            max_pk = max([row['pk'] for row in all_rows], default=0)
+            self.pk = self.pk or max_pk + 1
 
+            row_elems = [[self.pk, self.name, self.slug, self.link, self.ingredients, self.preparation, self.prep_time,
+                          self.created_at.strftime("%Y-%m-%d"), self.updated_at.strftime("%Y-%m-%d"),
+                          self.imgur_image if self.imgur_image else '',
+                          tags, tools, self.imgur_delete]]
+            found = False
+            for inum, row in enumerate(all_rows, start=2):
+                if row['pk'] == self.pk:
+                    worksheet.update(f"A{inum}", row_elems)
+                    found = True
+                    break
+            if not found:
+                worksheet.append_rows(row_elems)
 
     def delete(self, *args, **kwargs):
         worksheet = get_worksheet('ReceptesApp', 'Receptes')

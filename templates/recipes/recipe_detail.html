@@ -19,17 +19,17 @@
             </div>
         </div>
         <div class="row">
-            {% if recipe.image %}
-                <div class="col-md-6">
-                    <img src="{{ recipe.image }}" alt="Image of {{ recipe.name }}" class="img-fluid mb-4" style="max-width: 100%;">
-                </div>
-            {% endif %}
-            <div class="col-md-6">
+            <div class="col-md-8">
                 <div class="mb-4">
                     <h4>Ingredients</h4>
                     <p>{{ recipe.ingredients|safe }}</p>
                 </div>
             </div>
+            {% if recipe.image %}
+                <div class="col-md-4">
+                    <img src="{{ recipe.image }}" alt="Image of {{ recipe.name }}" class="img-fluid mb-4" style="max-width: 100%;">
+                </div>
+            {% endif %}
         </div>
         <div class="row">
             <div class="col-md-12">
