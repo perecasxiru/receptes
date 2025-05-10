@@ -11,6 +11,7 @@
         <div class="row">
             <div class="col-md-12 mb-4" >
                 <h1>{{ recipe.name }}</h1>
+                {% if recipe.link %} <a href="{{ recipe.link }}" target="_blank">{{ recipe.link }}</a> {% endif %}
                     <p>
                         {% for tag in recipe.tags.all %}
                             <span class="badge bg-secondary">{{ tag.name }}</span>
@@ -19,25 +20,29 @@
             </div>
         </div>
         <div class="row">
+            {% if recipe.ingredients|length > 20 %}
             <div class="col-md-8">
                 <div class="mb-4">
                     <h4>Ingredients</h4>
                     <p>{{ recipe.ingredients|safe }}</p>
                 </div>
             </div>
+            {% endif %}
             {% if recipe.image %}
                 <div class="col-md-4">
-                    <img src="{{ recipe.image }}" alt="Image of {{ recipe.name }}" class="img-fluid mb-4" style="max-width: 100%;">
+                    <img src="{{ recipe.image.url }}" alt="Image of {{ recipe.name }}" class="img-fluid mb-4" style="max-width: 100%;">
                 </div>
             {% endif %}
         </div>
         <div class="row">
+            {% if recipe.preparation|length > 20 %}
             <div class="col-md-12">
                 <div class="mb-4">
                     <h4>Preparació</h4>
                     <p>{{ recipe.preparation|safe }}</p>
                 </div>
             </div>
+            {% endif %}
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>

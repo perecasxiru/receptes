@@ -26,7 +26,7 @@ class RecipeAdmin(admin.ModelAdmin):
     list_display = ('image_preview', 'name', 'tags_preview')  # Display key fields
     prepopulated_fields = {"slug": ("name",)}
     list_display_links = ('image_preview', 'name')
-    readonly_fields = ('image_preview', 'imgur_delete', 'imgur_image')
+    readonly_fields = ('image_preview',)
     list_filter = ('tags', 'tools', 'created_at')  # Add filters for tags and creation date
     search_fields = ('name', 'ingredients', 'preparation')  # Enable search by these fields
     autocomplete_fields = ('tags', 'tools')  # Enable tag autocomplete in the admin form
@@ -39,8 +39,8 @@ class RecipeAdmin(admin.ModelAdmin):
         return actions
 
     def image_preview(self, obj):
-        if obj.imgur_image:
-            img = obj.imgur_image
+        if obj.image:
+            img = obj.image.url
         else:
             img = "https://via.placeholder.com/640x360"
         return format_html('<img src="{}" style="width: 100px; height: auto;" />', img)

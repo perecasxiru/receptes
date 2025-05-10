@@ -57,9 +57,6 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'recipe_create' %}">Create Recipe</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'update_database' %}">Update database</a>
-                        </li>
                     {% endif %}
                 </ul>
             </div>
@@ -95,14 +92,14 @@
                 <div class="row">
                     {% for recipe in page_obj %}
                         <div class="col-md-4 mb-4">
-                            <a href="{{ recipe.get_absolute_url }}" style="text-decoration: none">
+                            <a href="{% url 'recipe_detail' recipe.slug %}" style="text-decoration: none">
                                 <div class="card">
                                     {% if recipe.image %}
-                                        <img src="{{ recipe.image }}" class="card-img-top" alt="Image of {{ recipe.name }}">
+                                        <img src="{{ recipe.image.url }}" class="card-img-top" alt="Image of {{ recipe.name }}">
                                     {% endif %}
                                     <div class="card-body">
                                         <h5 class="card-title">{{ recipe.name }}</h5>
-                                        {% for tag in recipe.tags %}
+                                        {% for tag in recipe.tags.all %}
                                             <span class="badge bg-secondary">{{ tag }}</span>
                                         {% endfor %}
                                     </div>

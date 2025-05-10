@@ -1,223 +1,144 @@
 from django.db import models
-
-# Create your models here.
-
-import os
-import re
-import uuid
-from django.core.files.uploadedfile import InMemoryUploadedFile
-from PIL import Image
-import io
 from django.urls import reverse
 from django_ckeditor_5.fields import CKEditor5Field
-from .services import get_worksheet, imgur_upload, imgur_delete
+from django.utils.text import slugify
+from django.core.files.base import ContentFile
 
+from PIL import Image
+from io import BytesIO
+import os
+import uuid
+
+# -------------------------------
+# Utilities
+# -------------------------------
 
 def random_file_name(instance, filename):
-    """
-    Generates a random file name for uploaded images.
-    Retains the original file extension.
-    """
-    ext = os.path.splitext(filename)[-1]  # Get the file extension
-    random_name = uuid.uuid4().hex  # Generate a random UUID
-    return f"uploads/{random_name}{ext}"  # Store in 'uploads' folder with a random name
+    ext = os.path.splitext(filename)[-1]
+    return f"uploads/{uuid.uuid4().hex}{ext}"
 
-
-def resize_image(image, imgur_delete_hash, max_size=(800, 800)):
-    """
-    Resize the image to a specified max size while maintaining aspect ratio.
-    """
-    img = Image.open(image)
+def resize_image(image_file, max_size=(800, 800)):
+    img = Image.open(image_file)
     if img.mode in ('RGBA', 'LA') or (img.mode == 'P' and 'transparency' in img.info):
         img = img.convert('RGB')
+    img.thumbnail(max_size)
 
-    img.thumbnail(max_size)  # Resize image
+    buffer = BytesIO()
+    img.save(buffer, format='JPEG', quality=85)
+    return ContentFile(buffer.getvalue())
 
-    # Save the resized image to a bytes buffer
-    output = io.BytesIO()
+def generate_unique_slug(instance, model_class, field_name='slug'):
+    """
+    Generates a unique slug for the given instance.
+    """
+    base_slug = slugify(getattr(instance, 'name', 'item'))
+    slug = base_slug
+    counter = 2
+    while model_class.objects.filter(**{field_name: slug}).exclude(pk=instance.pk).exists():
+        slug = f"{base_slug}-{counter}"
+        counter += 1
+    return slug
 
-    img.save(output, format='JPEG', quality=85)  # You can adjust the quality here
-    output.seek(0)
-    success_data = imgur_upload(output, imgur_delete_hash)
-    # print(success_data)
+# -------------------------------
+# Abstract Base for Resizeable Image
+# -------------------------------
 
-    # Create a new InMemoryUploadedFile object with the resized image
-    try:
-        return success_data['data']['link'], success_data['data']['deletehash']
-    except KeyError:
-        return None
+class ResizableImageMixin:
+    def resize_image_field(self, field_name):
+        image_field = getattr(self, field_name)
+        if image_field and hasattr(image_field, 'file'):
+            resized = resize_image(image_field)
+            image_field.save(image_field.name, resized, save=False)
 
+# -------------------------------
+# Core Models
+# -------------------------------
 
 class Tag(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
+    class Meta:
+        ordering = ['name']
+
     def __str__(self):
         return self.name
-
-    def save(self, *args, skip_action=False, to_db=True, **kwargs):
-        if to_db:
-            super().save(*args, **kwargs)
-
-        if not skip_action:
-            worksheet = get_worksheet('ReceptesApp', 'Tags')
-            all_rows = worksheet.get_all_records()
-            max_pk = max([row['pk'] for row in all_rows], default=0)
-            self.pk = self.pk or max_pk + 1
-            row_elems = [[self.pk, self.name]]
-
-            found = False
-            for inum, row in enumerate(all_rows, start=2):
-                if row['pk'] == self.pk:
-                    worksheet.update(f"A{inum}", row_elems)
-                    found = True
-                    break
-            if not found:
-                worksheet.append_rows(row_elems)
-
 
 class Tool(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
+    class Meta:
+        ordering = ['name']
+
     def __str__(self):
         return self.name
 
-    def save(self, *args, skip_action=False, to_db=True, **kwargs):
-        if to_db:
-            super().save(*args, **kwargs)
-
-        if not skip_action:
-            worksheet = get_worksheet('ReceptesApp', 'Tools')
-            all_rows = worksheet.get_all_records()
-            max_pk = max([row['pk'] for row in all_rows], default=0)
-            self.pk = self.pk or max_pk + 1
-            row_elems = [[self.pk, self.name]]
-
-            found = False
-            for inum, row in enumerate(all_rows, start=2):
-                if row['pk'] == self.pk:
-                    worksheet.update(f"A{inum}", row_elems)
-                    found = True
-                    break
-            if not found:
-                worksheet.append_rows(row_elems)
-
-
-
-class Recipe(models.Model):
+class Recipe(models.Model, ResizableImageMixin):
     name = models.CharField(max_length=100)
-    slug = models.SlugField(null=True)
+    slug = models.SlugField(null=True, blank=True)
     link = models.URLField(null=True, blank=True)
     ingredients = CKEditor5Field(null=True, blank=True)
     preparation = CKEditor5Field(null=True, blank=True)
-    prep_time = models.IntegerField(help_text="Preparation time in minutes", null=True, blank=True)
-    created_at = models.DateField(auto_now_add=True)
-    updated_at = models.DateField(auto_now=True)
+    prep_time = models.IntegerField(null=True, blank=True, help_text="Preparation time in minutes")
     image = models.ImageField(upload_to=random_file_name, null=True, blank=True)
-    imgur_image = models.URLField(null=True, blank=True)
-    imgur_delete = models.CharField(max_length=100, null=True, blank=True)
+
     tags = models.ManyToManyField(Tag, blank=True, related_name="recipes")
     tools = models.ManyToManyField(Tool, blank=True, related_name="recipes")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
 
     def __str__(self):
         return self.name
 
-    def save(self, *args, skip_action=False, to_db=True, cust_tags=None, cust_tools=None, request=None, **kwargs):
-        # Check if the image has been uploaded and resize it
-        if self.image and not skip_action:
-            self.imgur_image, self.imgur_delete = resize_image(self.image, self.imgur_delete)
-            self.image = None
-
-        self.preparation = self._process_description_links(self.preparation)
-        self.ingredients = self._process_description_links(self.ingredients)
-
-        if to_db:
-            super().save(*args, **kwargs)
-            tags = "|".join([t.name for t in self.tags.all()])
-            tools = "|".join([t.name for t in self.tools.all()])
-        else:
-            tags = "|".join(cust_tags) if cust_tags else ""
-            tools = "|".join(cust_tools) if cust_tags else ""
-            print(tags)
-
-        if not skip_action:
-            worksheet = get_worksheet('ReceptesApp', 'Receptes')
-
-            all_rows = worksheet.get_all_records()
-            max_pk = max([row['pk'] for row in all_rows], default=0)
-            self.pk = self.pk or max_pk + 1
-
-            row_elems = [[self.pk, self.name, self.slug, self.link, self.ingredients, self.preparation, self.prep_time,
-                          self.created_at.strftime("%Y-%m-%d"), self.updated_at.strftime("%Y-%m-%d"),
-                          self.imgur_image if self.imgur_image else '',
-                          tags, tools, self.imgur_delete]]
-            found = False
-            for inum, row in enumerate(all_rows, start=2):
-                if row['pk'] == self.pk:
-                    worksheet.update(f"A{inum}", row_elems)
-                    found = True
-                    break
-            if not found:
-                worksheet.append_rows(row_elems)
-
-    def delete(self, *args, **kwargs):
-        worksheet = get_worksheet('ReceptesApp', 'Receptes')
-        for inum, row in enumerate(worksheet.get_all_records(), start=2):
-            if row['pk'] == self.pk:
-                imgur_delete(row['imgur_delete'])
-                worksheet.delete_rows(inum)
-                break
-
-        super().delete(*args, **kwargs)
-
-    def get_absolute_url(self):
-        return reverse('recipe_detail', kwargs={'pk': self.pk, 'slug': self.slug})
-
-    def _process_description_links(self, text):
-        """
-        Replaces placeholders like [[Recipe Name]] with HTML links to the corresponding recipe.
-        """
-        worksheet = get_worksheet('ReceptesApp', 'Receptes')
-        all_rows = worksheet.get_all_records()
-
-        def replace_match(match):
-            my_slug = match.group(1)
-            for row in all_rows:
-                if row['slug'] == my_slug:
-                    url = os.path.join('https://receptes.onrender.com' + reverse('recipe_detail', kwargs={'pk': row['pk'], 'slug': row['slug']}))
-                    return f'<a href="{url}">{row["name"]}</a>'
-            return match.group(0)
-
-        # Use a regular expression to find all [[Recipe Name]] patterns
-        return re.sub(r'\[\[(.*?)\]\]', replace_match, text)
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = generate_unique_slug(self, Recipe)
+        if self.image:
+            self.resize_image_field('image')
+        super().save(*args, **kwargs)
 
 
 class Menu(models.Model):
     name = models.CharField(max_length=100)
-    slug = models.SlugField(null=True)
+    slug = models.SlugField(null=True, blank=True)
     date = models.DateField()
     description = CKEditor5Field(null=True, blank=True)
-    created_at = models.DateField(auto_now_add=True)
-    updated_at = models.DateField(auto_now=True)
     recipes = models.ManyToManyField(Recipe)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-date']
 
     def __str__(self):
         return self.name
 
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
 
-class Make(models.Model):
+
+class Make(models.Model, ResizableImageMixin):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="makes")
     date = models.DateField()
-    notes = CKEditor5Field(blank=True, help_text="Optional notes about this make")
+    notes = CKEditor5Field(blank=True)
     image = models.ImageField(upload_to=random_file_name, null=True, blank=True)
 
-    created_at = models.DateField(auto_now_add=True)
-    updated_at = models.DateField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-date']
 
     def __str__(self):
         return f"Make of {self.recipe.name} on {self.date}"
 
     def save(self, *args, **kwargs):
-        # Check if the image has been uploaded and resize it
         if self.image:
-            self.image = resize_image(self.image)
+            self.resize_image_field('image')
         super().save(*args, **kwargs)
