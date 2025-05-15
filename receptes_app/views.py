@@ -9,6 +9,8 @@ from django.http import HttpResponseForbidden
 from .forms import RecipeForm
 from django.utils.text import slugify
 import time
+from django.contrib.admin.views.decorators import staff_member_required
+
 
 
 def get_recipe_list(request):
@@ -49,6 +51,7 @@ def get_recipe_detail(request, slug):
     return render(request, 'recipes/recipe_detail.html', context)
 
 
+@staff_member_required
 def create_recipe(request):
     if request.method == "POST":
         form = RecipeForm(request.POST, request.FILES)
