@@ -7,6 +7,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
     env_file:
       - .env.prod
+    restart: unless-stopped
 
   django-web:
     build: .
@@ -18,6 +19,7 @@ services:
       - ./media:/app/media
     env_file:
       - .env.prod
+    restart: unless-stopped
 
   frontend-proxy:
     image: nginx:latest
@@ -29,5 +31,6 @@ services:
       - ./media:/media
     depends_on:
       - django-web
+    restart: unless-stopped
 volumes:
   postgres_data:
