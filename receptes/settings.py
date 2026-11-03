@@ -31,6 +31,14 @@ DEBUG = (os.environ.get('DEBUG') == "True")
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
 CSRF_TRUSTED_ORIGINS = os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "https://127.0.0.1").split(",")
 
+# HTTPS is terminated by Cloudflare; nginx passes the original protocol on
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# Only send login cookies over HTTPS. Set DJANGO_SECURE_COOKIES=False to log in
+# over plain http on the LAN (e.g. http://<lxc-ip>:8001/admin/).
+SECURE_COOKIES = os.getenv('DJANGO_SECURE_COOKIES', str(not DEBUG)) == 'True'
+SESSION_COOKIE_SECURE = SECURE_COOKIES
+CSRF_COOKIE_SECURE = SECURE_COOKIES
+
 
 # Application definition
 

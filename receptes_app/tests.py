@@ -202,3 +202,14 @@ class PlainTextTests(TestCase):
         self.assertEqual(html_to_text('<p>Mira <a href="https://x.cat">aqui</a></p>'), ("Mira aqui (https://x.cat)", 0))
         self.assertEqual(html_to_text("<p>&nbsp;</p>"), ("", 0))
         self.assertEqual(html_to_text('<figure><img src="/media/a.png"></figure>'), ("", 1))
+
+
+@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+class ProxyTests(TestCase):
+    def test_https_from_cloudflare_is_detected(self):
+        recipe = Recipe.objects.create(name="Amb foto", image=make_image())
+        # As forwarded by Cloudflare -> nginx: original host without port, protocol in a header
+        with self.settings(ALLOWED_HOSTS=['receptes.example']):
+            response = self.client.get(recipe.get_absolute_url(), HTTP_HOST='receptes.example',
+                                       HTTP_X_FORWARDED_PROTO='https')
+        self.assertContains(response, 'content="https://receptes.example/media/')
