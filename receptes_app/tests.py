@@ -13,7 +13,7 @@ from django.urls import reverse
 from PIL import Image
 
 from .models import Make, Menu, Recipe, Tag
-from .templatetags.recipe_text import sections
+from .templatetags.recipe_text import quantities, sections, servings
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -123,9 +123,18 @@ class RecipeViewTests(TestCase):
 
     def test_detail(self):
         response = self.client.get(reverse('recipe_detail', args=[self.recipe.slug]))
-        self.assertContains(response, "<li>300g d&#x27;espinacs</li>", html=True)
+        self.assertContains(response, '<li><span class="qty" data-q="300">300</span>g d&#x27;espinacs</li>', html=True)
         self.assertContains(response, '<h3 class="section-title">Per a la beixamel</h3>', html=True)
-        self.assertContains(response, "<li>30g de farina</li>", html=True)
+        self.assertContains(response, '<li><span class="qty" data-q="30">30</span>g de farina</li>', html=True)
+
+    def test_scaler_on_detail(self):
+        recipe = Recipe.objects.create(name="Poke", ingredients="Per a 2 persones:\n200g d'arròs",
+                                       preparation="Rentar els 200g d'arròs")
+        response = self.client.get(recipe.get_absolute_url())
+        self.assertContains(response, 'data-mode="servings"')
+        self.assertContains(response, 'data-base="2"')
+        self.assertContains(response, '<span class="qty" data-q="200">200</span>', count=2)
+        self.assertNotContains(response, '<h3 class="section-title">Per a 2 persones</h3>', html=True)
 
     def test_text_is_escaped(self):
         recipe = Recipe.objects.create(name="XSS", preparation="<script>alert(1)</script>")
@@ -194,6 +203,27 @@ class PlainTextTests(TestCase):
             {'title': "Per a la salsa", 'items': ["Triturar 2) tomàquets"]},
         ])
         self.assertEqual(sections(""), [])
+
+    def test_servings(self):
+        self.assertEqual(servings("Per a 24 crestes:\n3 llaunes"), {'title': "Per a 24 crestes", 'amount': 24, 'unit': "crestes"})
+        self.assertEqual(servings("per 2,5 persones:"), {'title': "per 2,5 persones", 'amount': 2.5, 'unit': "persones"})
+        self.assertIsNone(servings("Per a la salsa:\n1 ou"))
+
+    def test_quantities_scaled(self):
+        html = quantities("Els 200g d'arròs, 1/2 mango, 1½ ous i 2-3 pebrots")
+        for value, text in [("200", "200"), ("0.5", "1/2"), ("1.5", "1½"), ("2", "2"), ("3", "3")]:
+            self.assertIn(f'<span class="qty" data-q="{value}">{text}</span>', html)
+
+    def test_quantities_fixed(self):
+        for line in ["Coure 20min a 180 graus", "1.5x d'aigua", "Barreja 50/50", "Daus de 2cm", "Repetir 2 vegades",
+                     "Forn a 200°C", "Vitamina B12"]:
+            self.assertNotIn('class="qty"', quantities(line), line)
+
+    def test_quantities_escape_and_links(self):
+        html = quantities('<b>2</b> ous, mira https://ex.cat/3')
+        self.assertIn('&lt;b&gt;', html)
+        self.assertIn('<a href="https://ex.cat/3"', html)
+        self.assertNotIn('data-q="3"', html)
 
     def test_html_conversion(self):
         html_to_text = importlib.import_module('receptes_app.migrations.0005_html_to_plain_text').html_to_text

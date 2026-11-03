@@ -21,10 +21,11 @@ class RecipeForm(forms.ModelForm):
     )
     ingredients = forms.CharField(
         label="Ingredients",
-        help_text="Un per línia. Acaba una línia amb «:» per fer un subtítol.",
+        help_text="Un per línia. Acaba una línia amb «:» per fer un subtítol. "
+                  "Comença amb «Per a 4 persones:» per poder ajustar les quantitats.",
         widget=forms.Textarea(attrs={
             'class': 'form-control', 'rows': 12,
-            'placeholder': "300g d'espinacs\n1 ceba\nPer a la beixamel:\n30g de farina\n75g de llet",
+            'placeholder': "Per a 4 persones:\n300g d'espinacs\n1 ceba\nPer a la beixamel:\n30g de farina\n75g de llet",
         }),
         required=False
     )
