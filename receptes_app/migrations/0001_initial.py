@@ -2,7 +2,6 @@
 
 from django.db import migrations, models
 import django.db.models.deletion
-import django_ckeditor_5.fields
 import receptes_app.models
 
 
@@ -66,11 +65,11 @@ class Migration(migrations.Migration):
                 ("link", models.URLField(blank=True, null=True)),
                 (
                     "ingredients",
-                    django_ckeditor_5.fields.CKEditor5Field(blank=True, null=True),
+                    models.TextField(blank=True, null=True),
                 ),
                 (
                     "preparation",
-                    django_ckeditor_5.fields.CKEditor5Field(blank=True, null=True),
+                    models.TextField(blank=True, null=True),
                 ),
                 (
                     "prep_time",
@@ -123,7 +122,7 @@ class Migration(migrations.Migration):
                 ("date", models.DateField()),
                 (
                     "description",
-                    django_ckeditor_5.fields.CKEditor5Field(blank=True, null=True),
+                    models.TextField(blank=True, null=True),
                 ),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 ("updated_at", models.DateTimeField(auto_now=True)),
@@ -146,7 +145,7 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 ("date", models.DateField()),
-                ("notes", django_ckeditor_5.fields.CKEditor5Field(blank=True)),
+                ("notes", models.TextField(blank=True)),
                 (
                     "image",
                     models.ImageField(

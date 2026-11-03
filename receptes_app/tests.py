@@ -1,4 +1,5 @@
 import datetime
+import importlib
 import os
 import shutil
 import tempfile
@@ -12,6 +13,7 @@ from django.urls import reverse
 from PIL import Image
 
 from .models import Make, Menu, Recipe, Tag
+from .templatetags.recipe_text import sections
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -75,10 +77,10 @@ class RecipeModelTests(TestCase):
         Make.objects.create(recipe=recipe, date=datetime.date(2026, 9, 1))  # No photo
         self.assertEqual(recipe.display_image.name, latest.image.name)
 
-    def test_empty_rich_text_is_cleared(self):
-        recipe = Recipe.objects.create(name="Buida", ingredients="<p>&nbsp;</p>", preparation="<p>Fregir</p>")
+    def test_text_is_stripped(self):
+        recipe = Recipe.objects.create(name="Buida", ingredients="  \n ", preparation="Fregir\n")
         self.assertEqual(recipe.ingredients, "")
-        self.assertEqual(recipe.preparation, "<p>Fregir</p>")
+        self.assertEqual(recipe.preparation, "Fregir")
 
     def test_clean_media_keeps_used_files(self):
         recipe = Recipe.objects.create(name="Usada", image=make_image())
@@ -100,7 +102,7 @@ class RecipeViewTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.tag = Tag.objects.create(name="Plat principal")
-        cls.recipe = Recipe.objects.create(name="Croquetes d'espinacs", ingredients="<ul><li>300g d'espinacs</li></ul>")
+        cls.recipe = Recipe.objects.create(name="Croquetes d'espinacs", ingredients="300g d'espinacs\nPer a la beixamel:\n- 30g de farina")
         cls.recipe.tags.add(cls.tag)
         Recipe.objects.create(name="Pastís de carbassa")
 
@@ -121,7 +123,15 @@ class RecipeViewTests(TestCase):
 
     def test_detail(self):
         response = self.client.get(reverse('recipe_detail', args=[self.recipe.slug]))
-        self.assertContains(response, "300g d'espinacs")
+        self.assertContains(response, "<li>300g d&#x27;espinacs</li>", html=True)
+        self.assertContains(response, '<h3 class="section-title">Per a la beixamel</h3>', html=True)
+        self.assertContains(response, "<li>30g de farina</li>", html=True)
+
+    def test_text_is_escaped(self):
+        recipe = Recipe.objects.create(name="XSS", preparation="<script>alert(1)</script>")
+        response = self.client.get(recipe.get_absolute_url())
+        self.assertNotContains(response, "<script>alert(1)")
+        self.assertContains(response, "&lt;script&gt;")
 
     def test_detail_404(self):
         response = self.client.get(reverse('recipe_detail', args=["no-existeix"]))
@@ -155,7 +165,7 @@ class RecipeViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def test_cooking_log_on_detail(self):
-        Make.objects.create(recipe=self.recipe, date=datetime.date(2026, 10, 12), notes="<p>Més sal</p>")
+        Make.objects.create(recipe=self.recipe, date=datetime.date(2026, 10, 12), notes="Més sal")
         response = self.client.get(self.recipe.get_absolute_url())
         self.assertContains(response, "12/10/2026")
         self.assertContains(response, "Més sal")
@@ -174,3 +184,21 @@ class RecipeViewTests(TestCase):
         response = self.client.post(reverse('recipe_create'), {'name': "Una altra", 'slug': self.recipe.slug})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'invalid-feedback d-block')
+
+
+class PlainTextTests(TestCase):
+    def test_sections(self):
+        text = "1. Bullir\n\n- Escórrer\nPer a la salsa:\n• Triturar 2) tomàquets"
+        self.assertEqual(sections(text), [
+            {'title': None, 'items': ["Bullir", "Escórrer"]},
+            {'title': "Per a la salsa", 'items': ["Triturar 2) tomàquets"]},
+        ])
+        self.assertEqual(sections(""), [])
+
+    def test_html_conversion(self):
+        html_to_text = importlib.import_module('receptes_app.migrations.0005_html_to_plain_text').html_to_text
+        self.assertEqual(html_to_text("<ul><li>1 ou</li><li>200g&nbsp;farina</li></ul>"), ("1 ou\n200g farina", 0))
+        self.assertEqual(html_to_text("<p><strong>Massa</strong></p><h3>Salsa</h3>"), ("Massa:\nSalsa:", 0))
+        self.assertEqual(html_to_text('<p>Mira <a href="https://x.cat">aqui</a></p>'), ("Mira aqui (https://x.cat)", 0))
+        self.assertEqual(html_to_text("<p>&nbsp;</p>"), ("", 0))
+        self.assertEqual(html_to_text('<figure><img src="/media/a.png"></figure>'), ("", 1))

@@ -2,8 +2,6 @@ from django.db import models, transaction
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.urls import reverse
-from django_ckeditor_5.fields import CKEditor5Field
-from django.utils.html import strip_tags
 from django.utils.text import slugify
 from django.core.files.base import ContentFile
 
@@ -43,14 +41,6 @@ def generate_unique_slug(instance, model_class, field_name='slug'):
         slug = f"{base_slug}-{counter}"
         counter += 1
     return slug
-
-def clean_rich_text(html):
-    """Return '' for editor output with no real content, like '<p>&nbsp;</p>'."""
-    if html and strip_tags(html).replace('&nbsp;', '').replace('\xa0', '').strip():
-        return html
-    if html and '<img' in html:
-        return html
-    return ''
 
 def delete_file_on_commit(field_file, name):
     """Remove a stored file once the current transaction succeeds."""
@@ -108,8 +98,12 @@ class Recipe(models.Model, ResizableImageMixin):
     name = models.CharField(max_length=100)
     slug = models.SlugField(max_length=110, unique=True, blank=True)
     link = models.URLField(null=True, blank=True)
-    ingredients = CKEditor5Field(null=True, blank=True)
-    preparation = CKEditor5Field(null=True, blank=True)
+    ingredients = models.TextField(
+        blank=True, default='',
+        help_text="Un ingredient per línia. Una línia acabada en «:» és un subtítol (p. ex. «Per a la salsa:»).")
+    preparation = models.TextField(
+        blank=True, default='',
+        help_text="Un pas per línia. Una línia acabada en «:» és un subtítol.")
     prep_time = models.IntegerField(null=True, blank=True, help_text="Preparation time in minutes")
     image = models.ImageField(upload_to=random_file_name, null=True, blank=True)
 
@@ -141,8 +135,8 @@ class Recipe(models.Model, ResizableImageMixin):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = generate_unique_slug(self, Recipe)
-        self.ingredients = clean_rich_text(self.ingredients)
-        self.preparation = clean_rich_text(self.preparation)
+        self.ingredients = (self.ingredients or '').strip()
+        self.preparation = (self.preparation or '').strip()
         self.save_with_image(*args, **kwargs)
 
 
@@ -150,7 +144,7 @@ class Menu(models.Model):
     name = models.CharField(max_length=100)
     slug = models.SlugField(max_length=110, unique=True, blank=True)
     date = models.DateField()
-    description = CKEditor5Field(null=True, blank=True)
+    description = models.TextField(blank=True, default='')
     recipes = models.ManyToManyField(Recipe)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -168,14 +162,14 @@ class Menu(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = generate_unique_slug(self, Menu)
-        self.description = clean_rich_text(self.description)
+        self.description = (self.description or '').strip()
         super().save(*args, **kwargs)
 
 
 class Make(models.Model, ResizableImageMixin):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="makes")
     date = models.DateField()
-    notes = CKEditor5Field(blank=True)
+    notes = models.TextField(blank=True)
     image = models.ImageField(upload_to=random_file_name, null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -188,7 +182,7 @@ class Make(models.Model, ResizableImageMixin):
         return f"Make of {self.recipe.name} on {self.date}"
 
     def save(self, *args, **kwargs):
-        self.notes = clean_rich_text(self.notes)
+        self.notes = (self.notes or '').strip()
         self.save_with_image(*args, **kwargs)
 
 

@@ -3,18 +3,17 @@
 {% block title %}{% if recipe %}Editar {{ recipe.name }}{% else %}Nova recepta{% endif %} · Receptes{% endblock %}
 
 {% block head %}
-    {{ form.media }}  <!-- CKEditor 5 scripts -->
     <style>
         .panel { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 1.5rem; }
         .field-label { font-weight: 600; font-size: .95rem; }
         /* Tag/tool checkboxes as selectable chips */
         .checks > div { display: flex; flex-wrap: wrap; gap: .5rem; }
-        .checks label {
+        .checks > div label {
             display: inline-flex; align-items: center; gap: .4rem;
             padding: .3rem .8rem; border: 1px solid var(--line); border-radius: 999px;
             cursor: pointer; font-size: .875rem;
         }
-        .checks label:has(input:checked) { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-dark); }
+        .checks > div label:has(input:checked) { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-dark); }
         .checks input { accent-color: var(--accent); }
     </style>
 {% endblock %}
@@ -39,9 +38,10 @@
         {% csrf_token %}
         <div class="row">
             {% for f in form %}
-                <div class="{% if forloop.counter0 < 3 %}col-md-4{% elif forloop.counter0 > 4 %}col-md-6{% endif %} mb-4{% if f.name == 'tags' or f.name == 'tools' %} checks{% endif %}">
+                <div class="{% if forloop.counter0 < 3 %}col-md-4{% elif forloop.counter0 == 3 %}col-md-5{% elif forloop.counter0 == 4 %}col-md-7{% else %}col-md-6{% endif %} mb-4{% if f.name == 'tags' or f.name == 'tools' %} checks{% endif %}">
                     <label class="field-label mb-2 d-block" for="{{ f.id_for_label }}">{{ f.label }}</label>
                     {{ f }}
+                    {% if f.help_text %}<div class="form-text">{{ f.help_text }}</div>{% endif %}
                     {% for error in f.errors %}
                         <div class="invalid-feedback d-block">{{ error }}</div>
                     {% endfor %}
