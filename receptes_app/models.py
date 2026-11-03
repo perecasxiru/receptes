@@ -1,6 +1,9 @@
-from django.db import models
+from django.db import models, transaction
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 from django.urls import reverse
 from django_ckeditor_5.fields import CKEditor5Field
+from django.utils.html import strip_tags
 from django.utils.text import slugify
 from django.core.files.base import ContentFile
 
@@ -41,6 +44,20 @@ def generate_unique_slug(instance, model_class, field_name='slug'):
         counter += 1
     return slug
 
+def clean_rich_text(html):
+    """Return '' for editor output with no real content, like '<p>&nbsp;</p>'."""
+    if html and strip_tags(html).replace('&nbsp;', '').replace('\xa0', '').strip():
+        return html
+    if html and '<img' in html:
+        return html
+    return ''
+
+def delete_file_on_commit(field_file, name):
+    """Remove a stored file once the current transaction succeeds."""
+    if name:
+        storage = field_file.storage
+        transaction.on_commit(lambda: storage.delete(name))
+
 # -------------------------------
 # Abstract Base for Resizeable Image
 # -------------------------------
@@ -53,6 +70,17 @@ class ResizableImageMixin:
             resized = resize_image(image_field)
             name = os.path.splitext(image_field.name)[0] + '.jpg'
             image_field.save(name, resized, save=False)
+
+    def save_with_image(self, *args, **kwargs):
+        """Resize a new image and delete the previous file if it was replaced or cleared."""
+        old_name = None
+        if self.pk:
+            old_name = type(self).objects.filter(pk=self.pk).values_list('image', flat=True).first()
+        if self.image:
+            self.resize_image_field('image')
+        models.Model.save(self, *args, **kwargs)  # Mixin is listed after Model, so super() would skip it
+        if old_name and old_name != self.image.name:
+            delete_file_on_commit(self.image, old_name)
 
 # -------------------------------
 # Core Models
@@ -97,12 +125,25 @@ class Recipe(models.Model, ResizableImageMixin):
     def __str__(self):
         return self.name
 
+    def get_absolute_url(self):
+        return reverse('recipe_detail', args=[self.slug])
+
+    @property
+    def display_image(self):
+        """The recipe's own photo, or else the most recent photo from its cooking log."""
+        if self.image:
+            return self.image
+        for make in self.makes.all():  # Ordered by -date; prefetch 'makes' in list views
+            if make.image:
+                return make.image
+        return None
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = generate_unique_slug(self, Recipe)
-        if self.image:
-            self.resize_image_field('image')
-        super().save(*args, **kwargs)
+        self.ingredients = clean_rich_text(self.ingredients)
+        self.preparation = clean_rich_text(self.preparation)
+        self.save_with_image(*args, **kwargs)
 
 
 class Menu(models.Model):
@@ -121,9 +162,13 @@ class Menu(models.Model):
     def __str__(self):
         return self.name
 
+    def get_absolute_url(self):
+        return reverse('menu_detail', args=[self.slug])
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = generate_unique_slug(self, Menu)
+        self.description = clean_rich_text(self.description)
         super().save(*args, **kwargs)
 
 
@@ -143,6 +188,12 @@ class Make(models.Model, ResizableImageMixin):
         return f"Make of {self.recipe.name} on {self.date}"
 
     def save(self, *args, **kwargs):
-        if self.image:
-            self.resize_image_field('image')
-        super().save(*args, **kwargs)
+        self.notes = clean_rich_text(self.notes)
+        self.save_with_image(*args, **kwargs)
+
+
+@receiver(post_delete, sender=Recipe)
+@receiver(post_delete, sender=Make)
+def delete_image_file(sender, instance, **kwargs):
+    if instance.image:
+        delete_file_on_commit(instance.image, instance.image.name)

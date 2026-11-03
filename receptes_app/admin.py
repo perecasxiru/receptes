@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.shortcuts import redirect
 from django.utils.html import format_html
 from .models import Tag, Tool, Recipe, Menu, Make
 
@@ -68,6 +69,12 @@ class MakeAdmin(admin.ModelAdmin):
     list_filter = ('date',)  # Add a filter for the date field
     search_fields = ('recipe__name', 'notes')  # Enable search for related recipe name and notes
     autocomplete_fields = ('recipe',)  # Enable recipe autocomplete in the admin form
+
+    def response_add(self, request, obj, post_url_continue=None):
+        # Plain "Save" goes back to the recipe page, where the cooking log is shown
+        if '_continue' not in request.POST and '_addanother' not in request.POST:
+            return redirect(obj.recipe)
+        return super().response_add(request, obj, post_url_continue)
 
     def image_preview(self, obj):
         if obj.image:

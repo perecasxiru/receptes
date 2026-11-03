@@ -38,7 +38,7 @@ class RecipeForm(forms.ModelForm):
     image = forms.ImageField(
         label="Imatge",
         required=False,
-        widget=forms.FileInput(attrs={'class': 'form-control'})
+        widget=forms.ClearableFileInput(attrs={'class': 'form-control'})
     )
     tags = forms.ModelMultipleChoiceField(
         label="Etiquetes",

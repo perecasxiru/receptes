@@ -36,7 +36,7 @@
         .site-nav .navbar-brand { color: var(--ink); font-size: 1.5rem; }
         .site-nav .navbar-brand span { color: var(--accent); }
         .site-nav .nav-link { color: var(--muted); font-weight: 500; }
-        .site-nav .nav-link:hover { color: var(--accent); }
+        .site-nav .nav-link:hover, .site-nav .nav-link.active { color: var(--accent); }
 
         .btn-accent {
             --bs-btn-color: #fff;
@@ -87,6 +87,45 @@
             --bs-pagination-active-border-color: var(--accent);
             --bs-pagination-focus-box-shadow: 0 0 0 .2rem rgba(196, 87, 46, .2);
         }
+        /* Recipe cards (list + menus) */
+        .recipe-card {
+            display: block;
+            height: 100%;
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            overflow: hidden;
+            color: inherit;
+            text-decoration: none;
+            transition: transform .2s, box-shadow .2s;
+        }
+        .recipe-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(43, 37, 32, .10);
+            color: inherit;
+        }
+        .recipe-card .thumb {
+            aspect-ratio: 4 / 3;
+            width: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        /* Recipes without a photo get a coloured tile with their initial */
+        .recipe-card .thumb-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, .9);
+            background: linear-gradient(135deg, #e3a27f, #c4572e);
+        }
+        .col:nth-child(4n+2) .thumb-empty { background: linear-gradient(135deg, #b9c48f, #6f8a3c); }
+        .col:nth-child(4n+3) .thumb-empty { background: linear-gradient(135deg, #f0c873, #d99a2b); }
+        .col:nth-child(4n+4) .thumb-empty { background: linear-gradient(135deg, #c9a3a0, #8f5b57); }
+        .recipe-card .title { font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 1.1rem; line-height: 1.25; }
+        .recipe-card .meta { color: var(--muted); font-size: .8rem; }
         .site-footer { color: var(--muted); border-top: 1px solid var(--line); }
     </style>
     {% block head %}{% endblock %}
@@ -95,21 +134,29 @@
     <nav class="navbar navbar-expand-md site-nav sticky-top">
         <div class="container">
             <a class="navbar-brand" href="{% url 'recipe_list' %}">Receptes<span>.</span></a>
-            {% if user.is_staff %}
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Obrir menú">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                    <ul class="navbar-nav align-items-md-center gap-md-2">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Obrir menú">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <ul class="navbar-nav align-items-md-center gap-md-2">
+                    {% with url_name=request.resolver_match.url_name %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if url_name == 'recipe_list' or url_name == 'recipe_detail' %}active{% endif %}" href="{% url 'recipe_list' %}">Receptes</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if url_name == 'menu_list' or url_name == 'menu_detail' %}active{% endif %}" href="{% url 'menu_list' %}">Menús</a>
+                        </li>
+                    {% endwith %}
+                    {% if user.is_staff %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'admin:index' %}">Admin</a>
                         </li>
                         <li class="nav-item">
                             <a class="btn btn-accent btn-sm px-3" href="{% url 'recipe_create' %}">+ Nova recepta</a>
                         </li>
-                    </ul>
-                </div>
-            {% endif %}
+                    {% endif %}
+                </ul>
+            </div>
         </div>
     </nav>
 

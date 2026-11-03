@@ -4,7 +4,7 @@
 
 {% block head %}
     <meta property="og:title" content="{{ recipe.name }}">
-    {% if recipe.image %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ recipe.image.url }}">{% endif %}
+    {% if recipe.display_image %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ recipe.display_image.url }}">{% endif %}
     <style>
         .back { color: var(--muted); text-decoration: none; font-size: .9rem; }
         .back:hover { color: var(--accent); }
@@ -55,6 +55,14 @@
         }
         .ingredients img, .steps img { max-width: 100%; height: auto; border-radius: 12px; }
         @media (min-width: 992px) { .sticky-panel { position: sticky; top: 5.5rem; } }
+
+        /* Cooking log */
+        .make { display: flex; gap: 1rem; padding: 1rem 0; border-top: 1px dashed var(--line); }
+        .make:first-of-type { border-top: 0; padding-top: 0; }
+        .make-photo { width: 96px; height: 96px; object-fit: cover; border-radius: 12px; flex-shrink: 0; }
+        .make-date { font-weight: 600; }
+        .make-notes { color: var(--muted); }
+        .make-notes p:last-child { margin-bottom: 0; }
     </style>
 {% endblock %}
 
@@ -73,18 +81,20 @@
             {% if recipe.tools.all %}<span>🍳 {{ recipe.tools.all|join:", " }}</span>{% endif %}
             {% if recipe.link %}<a href="{{ recipe.link }}" target="_blank" rel="noopener noreferrer">Recepta original ↗</a>{% endif %}
             {% if user.is_staff %}
-                <a href="{% url 'admin:receptes_app_recipe_change' recipe.pk %}" class="btn btn-soft btn-sm ms-md-auto">Editar</a>
+                <a href="{% url 'recipe_edit' recipe.slug %}" class="btn btn-soft btn-sm ms-md-auto">Editar</a>
             {% endif %}
         </div>
     </header>
 
-    {% if recipe.image %}
-        <img src="{{ recipe.image.url }}" alt="{{ recipe.name }}" class="hero-img mb-4 mb-md-5">
-    {% endif %}
+    {% with image=recipe.display_image %}
+        {% if image %}
+            <img src="{{ image.url }}" alt="{{ recipe.name }}" class="hero-img mb-4 mb-md-5">
+        {% endif %}
+    {% endwith %}
 
-    {% if recipe.ingredients|length > 20 or recipe.preparation|length > 20 %}
+    {% if recipe.ingredients or recipe.preparation %}
         <div class="row g-4">
-            {% if recipe.ingredients|length > 20 %}
+            {% if recipe.ingredients %}
                 <div class="col-lg-4">
                     <section class="panel ingredients sticky-panel">
                         <h2>Ingredients</h2>
@@ -92,8 +102,8 @@
                     </section>
                 </div>
             {% endif %}
-            {% if recipe.preparation|length > 20 %}
-                <div class="{% if recipe.ingredients|length > 20 %}col-lg-8{% else %}col-12{% endif %}">
+            {% if recipe.preparation %}
+                <div class="{% if recipe.ingredients %}col-lg-8{% else %}col-12{% endif %}">
                     <section class="panel steps">
                         <h2>Preparació</h2>
                         {{ recipe.preparation|safe }}
@@ -106,5 +116,32 @@
             Aquesta recepta encara no té ingredients ni preparació.
             {% if recipe.link %}Mira la <a href="{{ recipe.link }}" target="_blank" rel="noopener noreferrer">recepta original</a>.{% endif %}
         </div>
+    {% endif %}
+
+    {% if makes or user.is_staff %}
+        <section class="panel mt-4">
+            <div class="d-flex flex-wrap align-items-baseline gap-2 mb-3">
+                <h2 class="mb-0">Quan l'hem cuinada</h2>
+                {% if makes %}
+                    <span class="text-body-secondary small">{{ makes|length }} cop{{ makes|length|pluralize:"s" }} · l'última el {{ makes.0.date|date:"d/m/Y" }}</span>
+                {% endif %}
+                {% if user.is_staff %}
+                    <a href="{% url 'admin:receptes_app_make_add' %}?recipe={{ recipe.pk }}&date={% now "Y-m-d" %}" class="btn btn-soft btn-sm ms-auto">+ L'he cuinada</a>
+                {% endif %}
+            </div>
+            {% for make in makes %}
+                <div class="make">
+                    {% if make.image %}
+                        <a href="{{ make.image.url }}" target="_blank"><img src="{{ make.image.url }}" alt="{{ recipe.name }}, {{ make.date|date:'d/m/Y' }}" class="make-photo" loading="lazy"></a>
+                    {% endif %}
+                    <div>
+                        <div class="make-date">{{ make.date|date:"d/m/Y" }}</div>
+                        {% if make.notes %}<div class="make-notes">{{ make.notes|safe }}</div>{% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <p class="text-body-secondary mb-0">Encara no l'heu cuinada.</p>
+            {% endfor %}
+        </section>
     {% endif %}
 {% endblock %}

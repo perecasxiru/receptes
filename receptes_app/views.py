@@ -1,4 +1,4 @@
-from .models import Tag, Recipe
+from .models import Tag, Recipe, Menu
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core.paginator import Paginator
 from django.db.models import Q
@@ -12,7 +12,7 @@ def get_recipe_list(request):
     search_query = request.GET.get('search', '').strip()
 
     # Start with all recipes
-    recipes = Recipe.objects.prefetch_related('tags', 'tools')
+    recipes = Recipe.objects.prefetch_related('tags', 'tools', 'makes')
 
     # Filter by tag if provided
     if tag_filter:
@@ -37,9 +37,10 @@ def get_recipe_list(request):
 
 
 def get_recipe_detail(request, slug):
-    recipe = get_object_or_404(Recipe.objects.prefetch_related('tags', 'tools'), slug=slug)
+    recipe = get_object_or_404(Recipe.objects.prefetch_related('tags', 'tools', 'makes'), slug=slug)
     context = {
         'recipe': recipe,
+        'makes': recipe.makes.all(),
     }
     return render(request, 'recipes/recipe_detail.html', context)
 
@@ -55,3 +56,29 @@ def create_recipe(request):
     else:
         form = RecipeForm()
     return render(request, 'recipes/recipe_create.html', {'form': form})
+
+
+@staff_member_required
+def edit_recipe(request, slug):
+    recipe = get_object_or_404(Recipe, slug=slug)
+    if request.method == "POST":
+        form = RecipeForm(request.POST, request.FILES, instance=recipe)
+        if form.is_valid():
+            recipe = form.save()
+            return redirect(recipe)
+    else:
+        form = RecipeForm(instance=recipe)
+    return render(request, 'recipes/recipe_create.html', {'form': form, 'recipe': recipe})
+
+
+def get_menu_list(request):
+    menus = Menu.objects.prefetch_related('recipes__makes')
+    paginator = Paginator(menus, 24)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    return render(request, 'menus/menu_list.html', {'page_obj': page_obj})
+
+
+def get_menu_detail(request, slug):
+    menu = get_object_or_404(Menu, slug=slug)
+    recipes = menu.recipes.prefetch_related('tags', 'makes')
+    return render(request, 'menus/menu_detail.html', {'menu': menu, 'recipes': recipes})
