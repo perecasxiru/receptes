@@ -4,7 +4,7 @@ from django_ckeditor_5.fields import CKEditor5Field
 from django.utils.text import slugify
 from django.core.files.base import ContentFile
 
-from PIL import Image
+from PIL import Image, ImageOps
 from io import BytesIO
 import os
 import uuid
@@ -19,7 +19,8 @@ def random_file_name(instance, filename):
 
 def resize_image(image_file, max_size=(800, 800)):
     img = Image.open(image_file)
-    if img.mode in ('RGBA', 'LA') or (img.mode == 'P' and 'transparency' in img.info):
+    img = ImageOps.exif_transpose(img)  # Respect phone camera orientation
+    if img.mode != 'RGB':
         img = img.convert('RGB')
     img.thumbnail(max_size)
 
@@ -31,7 +32,8 @@ def generate_unique_slug(instance, model_class, field_name='slug'):
     """
     Generates a unique slug for the given instance.
     """
-    base_slug = slugify(getattr(instance, 'name', 'item'))
+    max_length = model_class._meta.get_field(field_name).max_length
+    base_slug = slugify(getattr(instance, 'name', ''))[:max_length - 4] or 'item'
     slug = base_slug
     counter = 2
     while model_class.objects.filter(**{field_name: slug}).exclude(pk=instance.pk).exists():
@@ -46,9 +48,11 @@ def generate_unique_slug(instance, model_class, field_name='slug'):
 class ResizableImageMixin:
     def resize_image_field(self, field_name):
         image_field = getattr(self, field_name)
-        if image_field and hasattr(image_field, 'file'):
+        # Only process freshly uploaded files; already stored images are left untouched
+        if image_field and not image_field._committed:
             resized = resize_image(image_field)
-            image_field.save(image_field.name, resized, save=False)
+            name = os.path.splitext(image_field.name)[0] + '.jpg'
+            image_field.save(name, resized, save=False)
 
 # -------------------------------
 # Core Models
@@ -74,7 +78,7 @@ class Tool(models.Model):
 
 class Recipe(models.Model, ResizableImageMixin):
     name = models.CharField(max_length=100)
-    slug = models.SlugField(null=True, blank=True)
+    slug = models.SlugField(max_length=110, unique=True, blank=True)
     link = models.URLField(null=True, blank=True)
     ingredients = CKEditor5Field(null=True, blank=True)
     preparation = CKEditor5Field(null=True, blank=True)
@@ -103,7 +107,7 @@ class Recipe(models.Model, ResizableImageMixin):
 
 class Menu(models.Model):
     name = models.CharField(max_length=100)
-    slug = models.SlugField(null=True, blank=True)
+    slug = models.SlugField(max_length=110, unique=True, blank=True)
     date = models.DateField()
     description = CKEditor5Field(null=True, blank=True)
     recipes = models.ManyToManyField(Recipe)
@@ -119,7 +123,7 @@ class Menu(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.name)
+            self.slug = generate_unique_slug(self, Menu)
         super().save(*args, **kwargs)
 
 

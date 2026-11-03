@@ -3,12 +3,9 @@ from .models import Tag, Recipe, Menu, Make, Tool
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core.paginator import Paginator
 from django.core.files.storage import default_storage
-from datetime import datetime
 from django.conf import settings
 from django.http import HttpResponseForbidden
 from .forms import RecipeForm
-from django.utils.text import slugify
-import time
 from django.contrib.admin.views.decorators import staff_member_required
 
 
@@ -56,26 +53,8 @@ def create_recipe(request):
     if request.method == "POST":
         form = RecipeForm(request.POST, request.FILES)
         if form.is_valid():
-            recipe = form.save(commit=False)
-
-            # Auto-generate unique slug if not provided
-            if not recipe.slug:
-                base_slug = slugify(recipe.name)
-                unique_slug = base_slug
-                counter = 2
-                while Recipe.objects.filter(slug=unique_slug).exists():
-                    unique_slug = f"{base_slug}-{counter}"
-                    counter += 1
-                recipe.slug = unique_slug
-
-            recipe.created_at = datetime.now()
-            recipe.updated_at = datetime.now()
-            recipe.save()
-
-            # Add M2M relations after saving the object
-            form.cleaned_data['tags'] and recipe.tags.set(form.cleaned_data['tags'])
-            form.cleaned_data['tools'] and recipe.tools.set(form.cleaned_data['tools'])
-
+            # Slug (if left empty) and image resizing are handled in Recipe.save()
+            form.save()
             return redirect('recipe_list')
     else:
         form = RecipeForm()

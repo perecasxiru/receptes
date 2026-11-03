@@ -1,0 +1,813 @@
+[
+{
+    "model": "receptes_app.recipe",
+    "pk": 1,
+    "fields": {
+        "name": "Pastís de carbassa",
+        "slug": "pastis-de-carbassa",
+        "link": "https://youtu.be/d7yGqjoPLsc?si=cDMPjBhZTucODmIK",
+        "ingredients": "<p>&nbsp;</p>",
+        "preparation": "<p>&nbsp;</p>",
+        "prep_time": null,
+        "created_at": "2024-11-23",
+        "updated_at": "2024-12-09",
+        "image": "",
+        "tags": [
+            1
+        ],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 2,
+    "fields": {
+        "name": "Croquetes d'espinacs",
+        "slug": "croquetes-despinacs",
+        "link": null,
+        "ingredients": "<ul><li>300g d'espinacs</li><li>1 ceba</li><li>formatge ratllat</li><li>30g de farina</li><li>75g de llet</li><li>1 ou</li><li>farina de galeta</li><li>oli, sal i pebre</li></ul>",
+        "preparation": "<ol><li>Bullir els 300g d'espinacs en poca aigua durant 2 minuts.</li><li>Passar-los a un colador per escórrer-los i esprémer per treure'n l'aigua.</li><li>Tallar 1 ceba ben petita i sofregir en oli.</li><li>Afegir-hi els espinacs i coure-ho 2 minuts.</li><li>Afegir-hi formatge ratllat i integrar-ho tot bé.</li><li>Afegir 30g de farina i coure-la uns 10min</li><li>Afegir els 75g de llet i remenar fins que faci beixamel.</li><li>Deixar refredar.</li><li>Formar les croquetes i arrebossar-les amb ou i farina de galeta.</li><li>Fregir-les.</li></ol>",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-12-09",
+        "image": "",
+        "tags": [
+            2,
+            3
+        ],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 4,
+    "fields": {
+        "name": "Pollastre a l'allada",
+        "slug": "pollastre-a-lallada",
+        "link": "https://www.3cat.cat/tv3/cuines/recepta/pollastre-a-lallada/25016/",
+        "ingredients": "<ul><li>4 pits de pollastre</li><li>3 caps d'all</li><li>1 manat de bledes</li><li>300ml de brou de pollastre</li><li>1l d'aigua</li><li>1 nou de mantega</li><li>Oli d'oliva</li><li>500g sal</li><li>500g sucre</li></ul>",
+        "preparation": "<ol><li>Escalivar 1 cap d'alls durant 30min a 180 graus.</li><li>Posar 1L d'aigua, els 4 pits pollastre i 50g de sal en un tupper, barrejar i reservar 30min.</li><li>Laminar 2 caps d'alls.</li><li>Fer una barreja de 50/50 de sal i sucre suficient per enterrar els pits de pollastre. Afegir-hi la meitat dels alls laminats i matxucar-ho amb les mans per impregnar-ho tot d'all.</li><li>Enterrar el pollastre a la barreja.</li><li>Escalfar 300ml de brou de pollastre amb l'altre meitat dels alls laminats i deixar-ho bullir 5min. Atemperar.</li><li>Triturar 2 grans d'alls, el brou amb els alls laminats i dos dits d'oli per fer-ne un a salsa.</li><li>Marcar el pollastre, tirar-hi 1 nou de mantega i 1 manat de bledes.</li><li>Quan les bledes hagin minvat, tirar-hi la meitat de la salsa.</li><li>Esperar a que es cogui bé el pollastre. Tirar la resta de la salsa abans de servir.</li></ol>",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-12-09",
+        "image": "",
+        "tags": [
+            3
+        ],
+        "tools": [
+            8
+        ]
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 5,
+    "fields": {
+        "name": "Tallarines amb carxofes",
+        "slug": "tallarines-amb-carxofes",
+        "link": null,
+        "ingredients": "<p>&nbsp;</p>",
+        "preparation": "<p>&nbsp;</p>",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-27",
+        "image": "",
+        "tags": [],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 6,
+    "fields": {
+        "name": "Salsa de rovells",
+        "slug": "salsa-de-rovells",
+        "link": null,
+        "ingredients": "<p>&nbsp;</p>",
+        "preparation": "<p>&nbsp;</p>",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-27",
+        "image": "",
+        "tags": [],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 7,
+    "fields": {
+        "name": "Quiche lorraine",
+        "slug": "quiche-lorraine",
+        "link": null,
+        "ingredients": "<p>&nbsp;</p>",
+        "preparation": "<p>&nbsp;</p>",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-27",
+        "image": "",
+        "tags": [],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 8,
+    "fields": {
+        "name": "Empanada de carbassa",
+        "slug": "empanada-de-carbassa",
+        "link": null,
+        "ingredients": "<p>&nbsp;</p>",
+        "preparation": "<p>&nbsp;</p>",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-27",
+        "image": "",
+        "tags": [],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 9,
+    "fields": {
+        "name": "Pa bao",
+        "slug": "pa-bao",
+        "link": null,
+        "ingredients": "<p>&nbsp;</p>",
+        "preparation": "<p>&nbsp;</p>",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-27",
+        "image": "",
+        "tags": [],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 10,
+    "fields": {
+        "name": "Curri de gambes i mango",
+        "slug": "curri-de-gambes-i-mango",
+        "link": null,
+        "ingredients": "<p>&nbsp;</p>",
+        "preparation": "<p>&nbsp;</p>",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-27",
+        "image": "",
+        "tags": [],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 11,
+    "fields": {
+        "name": "Fideus a l'estil singapur",
+        "slug": "fideus-a-lestil-singapur",
+        "link": null,
+        "ingredients": "",
+        "preparation": "",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-25",
+        "image": "",
+        "tags": [],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 12,
+    "fields": {
+        "name": "Pollastre a la crema",
+        "slug": "pollastre-a-la-crema",
+        "link": null,
+        "ingredients": "",
+        "preparation": "",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-25",
+        "image": "",
+        "tags": [],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 13,
+    "fields": {
+        "name": "Croquetes de la mare",
+        "slug": "croquetes-de-la-mare",
+        "link": null,
+        "ingredients": "<p>&nbsp;</p>",
+        "preparation": "<p>&nbsp;</p>",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-12-09",
+        "image": "",
+        "tags": [
+            2,
+            3
+        ],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 14,
+    "fields": {
+        "name": "Hamburguesa de llenties",
+        "slug": "hamburguesa-de-llenties",
+        "link": null,
+        "ingredients": "",
+        "preparation": "",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-25",
+        "image": "",
+        "tags": [],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 15,
+    "fields": {
+        "name": "Albergínies farcides",
+        "slug": "alberginies-farcides",
+        "link": null,
+        "ingredients": "<p>&nbsp;</p>",
+        "preparation": "<p>&nbsp;</p>",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-12-01",
+        "image": "",
+        "tags": [],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 16,
+    "fields": {
+        "name": "Crema de bròquil",
+        "slug": "crema-de-broquil",
+        "link": null,
+        "ingredients": "",
+        "preparation": "",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-25",
+        "image": "",
+        "tags": [],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 17,
+    "fields": {
+        "name": "Crema de coliflor amb ou poché",
+        "slug": "crema-de-coliflor-amb-ou-poche",
+        "link": null,
+        "ingredients": "",
+        "preparation": "",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-25",
+        "image": "",
+        "tags": [],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 18,
+    "fields": {
+        "name": "Crema de carbassa i pastanaga",
+        "slug": "crema-de-carbassa-i-pastanaga",
+        "link": null,
+        "ingredients": "",
+        "preparation": "",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-25",
+        "image": "",
+        "tags": [],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 19,
+    "fields": {
+        "name": "Crema de carbassó",
+        "slug": "crema-de-carbasso",
+        "link": null,
+        "ingredients": "",
+        "preparation": "",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-25",
+        "image": "",
+        "tags": [],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 20,
+    "fields": {
+        "name": "Crema de verdures",
+        "slug": "crema-de-verdures",
+        "link": null,
+        "ingredients": "",
+        "preparation": "",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-25",
+        "image": "",
+        "tags": [],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 21,
+    "fields": {
+        "name": "Orada al forn",
+        "slug": "orada-al-forn",
+        "link": null,
+        "ingredients": "",
+        "preparation": "",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-25",
+        "image": "",
+        "tags": [],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 22,
+    "fields": {
+        "name": "Magret d'ànec al pebre verd",
+        "slug": "magret-danec-al-pebre-verd",
+        "link": null,
+        "ingredients": "",
+        "preparation": "",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-25",
+        "image": "",
+        "tags": [],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 23,
+    "fields": {
+        "name": "Albergínies amb salsa de miso",
+        "slug": "alberginies-amb-salsa-de-miso",
+        "link": null,
+        "ingredients": "",
+        "preparation": "",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-25",
+        "image": "",
+        "tags": [],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 24,
+    "fields": {
+        "name": "Carrot cake",
+        "slug": "carrot-cake",
+        "link": null,
+        "ingredients": "",
+        "preparation": "",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-25",
+        "image": "",
+        "tags": [
+            1
+        ],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 25,
+    "fields": {
+        "name": "Cheese cake",
+        "slug": "cheese-cake",
+        "link": null,
+        "ingredients": "",
+        "preparation": "",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-25",
+        "image": "",
+        "tags": [
+            1
+        ],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 26,
+    "fields": {
+        "name": "Delightful flapjack",
+        "slug": "delightful-flapjack",
+        "link": null,
+        "ingredients": "",
+        "preparation": "",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-25",
+        "image": "",
+        "tags": [
+            1
+        ],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 27,
+    "fields": {
+        "name": "Pastís de cervesa guinness",
+        "slug": "pastis-de-cervesa-guinness",
+        "link": null,
+        "ingredients": "",
+        "preparation": "",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-25",
+        "image": "",
+        "tags": [
+            1
+        ],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 28,
+    "fields": {
+        "name": "Mona de pasqua",
+        "slug": "mona-de-pasqua",
+        "link": null,
+        "ingredients": "",
+        "preparation": "",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-25",
+        "image": "",
+        "tags": [
+            1
+        ],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 29,
+    "fields": {
+        "name": "Galetes de gingebre",
+        "slug": "galetes-de-gingebre",
+        "link": null,
+        "ingredients": "",
+        "preparation": "",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-25",
+        "image": "",
+        "tags": [
+            1
+        ],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 30,
+    "fields": {
+        "name": "Crema catalana",
+        "slug": "crema-catalana",
+        "link": null,
+        "ingredients": "",
+        "preparation": "",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-25",
+        "image": "",
+        "tags": [
+            1
+        ],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 31,
+    "fields": {
+        "name": "Magdalenes de carbassa",
+        "slug": "magdalenes-de-carbassa",
+        "link": null,
+        "ingredients": "<p>&nbsp;</p>",
+        "preparation": "<p>&nbsp;</p>",
+        "prep_time": 50,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-12-09",
+        "image": "",
+        "tags": [
+            1
+        ],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 32,
+    "fields": {
+        "name": "Pastís cremós de carbassa",
+        "slug": "pastis-cremos-de-carbassa",
+        "link": null,
+        "ingredients": "",
+        "preparation": "",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-25",
+        "image": "",
+        "tags": [
+            1
+        ],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 33,
+    "fields": {
+        "name": "Carquinyolis",
+        "slug": "carquinyolis",
+        "link": null,
+        "ingredients": "",
+        "preparation": "",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-27",
+        "image": "",
+        "tags": [
+            1
+        ],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 34,
+    "fields": {
+        "name": "Pastís mousse de llimona",
+        "slug": "pastis-mousse-de-llimona",
+        "link": null,
+        "ingredients": "",
+        "preparation": "",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-27",
+        "image": "",
+        "tags": [
+            1
+        ],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 35,
+    "fields": {
+        "name": "Lemon pie",
+        "slug": "lemon-pie",
+        "link": null,
+        "ingredients": "",
+        "preparation": "",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-27",
+        "image": "",
+        "tags": [
+            1
+        ],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 36,
+    "fields": {
+        "name": "Tàrtar de tonyina amb crema d'alvocat",
+        "slug": "tartar-de-tonyina-amb-crema-dalvocat",
+        "link": null,
+        "ingredients": "<ul><li>250g de tonyina crua</li><li>2 alvocats</li><li>1 ceba tendra japonesa / Un tros de ceba tendra</li><li>1/2 llima</li><li>Salsa de soja</li><li>Oli de sèsam</li><li>Gingebre ratllat</li><li>Tàperes</li></ul>",
+        "preparation": "<ol><li>Tallar 250g de tonyina, 1 ceba tendra i les tàperes en trossos petits.</li><li>Barrejar la tonyina, la ceba tendre, les tàperes i el gingebre ratllat i amanir-ho amb la soja i l'oli de sèsam</li><li>Deixar-ho reposar unes 2h per a que s'impregni.</li><li>Triturar 2 alvocats amb el suc de 1/2 llima.</li><li><p>Servir-ho tot junt.&nbsp;</p><p>Idea de presentació: En gotets petits, posar el tàrtar a sota i la crema d'alvocat a sobre utilitzant una màniga pastissera. Es poden posar unes <a href=\"/recipes/esferificacio-de-soja-39/\">Esferificació de soja</a> com a decoració.</p></li></ol>",
+        "prep_time": null,
+        "created_at": "2024-11-25",
+        "updated_at": "2024-11-28",
+        "image": "",
+        "tags": [
+            2
+        ],
+        "tools": [
+            8
+        ]
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 37,
+    "fields": {
+        "name": "Mousse de foie amb mago",
+        "slug": "mousse-de-foie-amb-mago",
+        "link": null,
+        "ingredients": "<ul><li>100 ml de nata 35%</li><li>50g foie</li><li>1/2 mango</li><li>1 cullerada de sucre</li><li>0.5g xantana</li></ul>",
+        "preparation": "<ol><li>Posar 100ml de nata i 50g de foie al foc fins que quedi desfet i deixar-ho atemperar.</li><li>Colar-ho amb un colador fi i posar-ho dins el sifó amb una càrrega.</li><li>Triturar el 1/2 mango, afegir-hi 1 cullerada de sucre i posar-ho al foc fins que es desfaci tot.</li><li>Afegir la xantana i triturar.</li><li>Deixar que es refredi.</li><li><p>Servir-ho tot junt.</p><p>Idea de presentació: En un gotet, posar la crema de mango a sota i acabar-ho amb el sifó per sobre</p></li></ol>",
+        "prep_time": null,
+        "created_at": "2024-11-27",
+        "updated_at": "2024-12-09",
+        "image": "",
+        "tags": [
+            2
+        ],
+        "tools": [
+            1,
+            6,
+            7,
+            8
+        ]
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 38,
+    "fields": {
+        "name": "Cremós de patata",
+        "slug": "cremos-de-patata",
+        "link": null,
+        "ingredients": "<ul><li>1 patata</li><li>1 porro</li><li>Caldo de pollastre</li></ul>",
+        "preparation": "<ol><li>Tallar 1 porro ben menut i sofregir-lo fins que estigui transparent.</li><li>Afegir la patata i sofregir uns minuts.</li><li>Afegir-hi caldo fins a cobrir i deixar fins que la patata estigui cuita.</li><li>Triturar-ho tot.</li></ol>",
+        "prep_time": null,
+        "created_at": "2024-11-27",
+        "updated_at": "2024-11-27",
+        "image": "",
+        "tags": [
+            4
+        ],
+        "tools": [
+            8
+        ]
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 39,
+    "fields": {
+        "name": "Esferificació de soja",
+        "slug": "esferificacio-de-soja",
+        "link": null,
+        "ingredients": "<ul><li>360ml d'aigua</li><li>2.5g d'alginato</li><li>3.1g de lactato o 6.2 de glucononactato</li><li>80ml de soja</li><li>1.2g de xantana</li><li>Oli</li></ul>",
+        "preparation": "<ul><li>Barrejar 90ml d0aigua amb la soja. Afegir-hi un raig d'oli, 1.2g de xantana, 6.2g de glucononactato i triturar-ho molt bé. Deixar-ho reposar durant 2h. En cas que es vulgui, es pot treure l'aire de la mescla amb una envasadora al buit.</li><li>Barrejar 270ml d'aigua amb 2.5g d'alginato, triturar-ho bé i deixar reposar durant 2h.</li><li>Formar les esferes amb una cullera d'esferes o amb un biberó si es volen fer petites dins de l'aigua amb alginato. Esperar un minutet i passar-les a un bol amb aigua, oli o soja abans de consumir-les.</li></ul>",
+        "prep_time": null,
+        "created_at": "2024-11-27",
+        "updated_at": "2024-11-28",
+        "image": "",
+        "tags": [
+            4
+        ],
+        "tools": [
+            7,
+            8,
+            9,
+            10
+        ]
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 40,
+    "fields": {
+        "name": "Olives esfèriques",
+        "slug": "olives-esferiques",
+        "link": null,
+        "ingredients": "<ul><li>500g d'olives, preferiblement sense pinyol</li><li>0.6g de lactato o 1.2g de gluconolactato</li><li>0.7g de xantana</li><li>2.5g d'alginato</li><li>500ml d'aigua</li><li>Oli d'oliva</li><li>Canyella</li><li>Pell de llimona</li><li>Anís estrellat</li></ul>",
+        "preparation": "<ol><li>Triturar 500g d'olives i passar-les per un drap fi a mode de colador. Hem d'aconseguir 200ml de suc d'oliva.</li><li>Triturar el suc amb 0.6g de lactato. Un cop dissolt, afegir-hi 0.7g de xantana i triturar-ho molt bé. Reservar tapat 24h.</li><li>Barrejar 500ml d'aigua amb 2.5g d'alginato i triturar-ho molt bé. Reservar 24h.</li><li>Preparar un oli amb la pell de llimona, canyella i anís. Aquí guardarem les esferes un cop formades.</li><li>Formar les esferes deixant-les 3min dins l'alginato, escórrer-les i passar-les a l'oli fins a consumir-les.</li></ol>",
+        "prep_time": null,
+        "created_at": "2024-11-27",
+        "updated_at": "2024-12-09",
+        "image": "",
+        "tags": [
+            2
+        ],
+        "tools": [
+            6,
+            7,
+            8,
+            9,
+            10
+        ]
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 41,
+    "fields": {
+        "name": "Espuma de pinyons",
+        "slug": "espuma-de-pinyons",
+        "link": null,
+        "ingredients": "<ul><li>100g de pinyons</li><li>70g de patata cuita</li><li>200ml de nata 35%</li><li>1 cullerada de mantega</li><li>Sal, pebre</li></ul>",
+        "preparation": "<ol><li>Daurar els 100g de pinyons amb 1 cullerada de mantega.</li><li>Incorporar els 200ml de nata, sal i pebre.</li><li>Incorporar els 70g de patata cuita i triturar-ho tot. Si veiem que està molt espès, afegir més nata o una mica de caldo.</li><li>Colar-ho, deixar-ho reposar a temperatura ambient fins que atemperi i passar-ho al sifó.</li></ol>",
+        "prep_time": null,
+        "created_at": "2024-11-27",
+        "updated_at": "2024-11-27",
+        "image": "",
+        "tags": [
+            4,
+            5
+        ],
+        "tools": [
+            1,
+            6,
+            8
+        ]
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 42,
+    "fields": {
+        "name": "Xurros de patata",
+        "slug": "xurros-de-patata",
+        "link": null,
+        "ingredients": "<ul><li>500g de patata cuita</li><li>1 ou</li><li>50g de maizena</li><li>30g de parmesà ratllat</li><li>Sal, pebre</li><li>Oli per fregir</li></ul>",
+        "preparation": "<ol><li>Xafar 500g de patata cuita.</li><li>Afegir-hi 1 ou, &nbsp;30g de formatge ratllat, 50g de maizena, sal i pebre.</li><li>Remenar fins que ens quedi una pasta homogènia.</li><li>Passar-ho dins una mànega pastissera amb un broc gros estrellat.</li><li>Formar els xurros sobre l'oli calent i esperar.a que estiguin ben daurats.</li><li>Es pot servir com unes patates braves acompanyant-los d'alguna salsa.</li></ol>",
+        "prep_time": null,
+        "created_at": "2024-11-27",
+        "updated_at": "2024-11-27",
+        "image": "",
+        "tags": [
+            2,
+            4
+        ],
+        "tools": [
+            11
+        ]
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 46,
+    "fields": {
+        "name": "Salsa romesco",
+        "slug": "salsa-romesco",
+        "link": null,
+        "ingredients": "<p>&nbsp;</p>",
+        "preparation": "<p>&nbsp;</p>",
+        "prep_time": null,
+        "created_at": "2024-12-09",
+        "updated_at": "2024-12-09",
+        "image": "",
+        "tags": [],
+        "tools": []
+    }
+},
+{
+    "model": "receptes_app.recipe",
+    "pk": 47,
+    "fields": {
+        "name": "Pollastre amb gambes",
+        "slug": "pollastre-amb-gambes",
+        "link": null,
+        "ingredients": "<ul><li>8 contracuixes de pollastre desossades</li><li>12 gambes</li><li>3 tomàquets de branca madurs</li><li>3 cebes</li><li>1 cabeça d'alls</li><li>750ml de fumet de peix de roca</li><li>Un grapat d'avellanes torrades</li><li>Un grapat d'ametlles torrades</li><li>Un grapat de pinyons</li><li>Safrà</li><li>Una branca de julivert</li><li>Vi ranci</li><li>Brandy (opcional).</li><li>Oli</li></ul>",
+        "preparation": "<ol><li>Posar oli en una cassola ben ample i marcar les 12 gambes a foc fort. Retirar-les.</li><li>Tallar 1 cabeça d'alls pel mig, sense treure'n la pell i ho posem al foc, amb l'oli de les gambes.</li><li>Salpebrem el pollastre.</li><li>Seguint a foc ben fort, marquem les 8 contracuixes de pollastre per totes les bandes fins que quedi ben segellat.</li><li>Afegim una copa de vi ranci i una copa de brandy i esperem que evapori l'alcohol.</li><li>Tallem les 3 cebes en quatre o cinc trossos en funció de la mida i ho afegim.</li><li>Tallem els 3 tomàquets en quatre o cinc trossos en funció de la mida i ho afegim.</li><li>Quan estigui tot ben marcat, afegim els 750ml de fumet de peix de roca i abaixem el foc. Ho tindrem a foc suau 1h aproximadament.</li><li>Fem una picada amb el grapat d'ametlles, les avellanes, el julivert i el safrà. Ho podem triturar o passar pel morter.</li><li>Afegim la picada, escampant-ho bé per tota la cassola. Coure 10min més. Anar remenant per integrar tota la picada a la salsa.</li><li>4min abans de servir, afegim les gambes i les ensorrem dins la salsa.</li><li>Servim amb uns pinyons torradets per sobre.</li></ol>",
+        "prep_time": 90,
+        "created_at": "2024-12-09",
+        "updated_at": "2024-12-09",
+        "image": "",
+        "tags": [
+            3
+        ],
+        "tools": []
+    }
+}
+]

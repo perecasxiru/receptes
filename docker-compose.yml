@@ -1,8 +1,6 @@
 services:
   db:
-    image: postgres:latest
-    ports:
-      - "5432:5432"
+    image: postgres:17  # Pinned: a major-version bump needs a manual pg_upgrade of the data volume
     volumes:
       - postgres_data:/var/lib/postgresql/data
     env_file:
