@@ -1,10 +1,7 @@
-from django.views.generic import ListView, DetailView
-from .models import Tag, Recipe, Menu, Make, Tool
+from .models import Tag, Recipe
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core.paginator import Paginator
-from django.core.files.storage import default_storage
-from django.conf import settings
-from django.http import HttpResponseForbidden
+from django.db.models import Q
 from .forms import RecipeForm
 from django.contrib.admin.views.decorators import staff_member_required
 
@@ -21,9 +18,9 @@ def get_recipe_list(request):
     if tag_filter:
         recipes = recipes.filter(tags__name=tag_filter)
 
-    # Filter by search query in name
+    # Filter by search query in name or ingredients
     if search_query:
-        recipes = recipes.filter(name__icontains=search_query)
+        recipes = recipes.filter(Q(name__icontains=search_query) | Q(ingredients__icontains=search_query))
 
     # Pagination
     paginator = Paginator(recipes, 30)
@@ -35,13 +32,12 @@ def get_recipe_list(request):
         'selected_tag': tag_filter,
         'search_query': search_query,
         'tags': Tag.objects.all(),
-        'is_debug': settings.DEBUG,
     }
     return render(request, 'recipes/recipe_list.html', context)
 
 
 def get_recipe_detail(request, slug):
-    recipe = get_object_or_404(Recipe, slug=slug)
+    recipe = get_object_or_404(Recipe.objects.prefetch_related('tags', 'tools'), slug=slug)
     context = {
         'recipe': recipe,
     }

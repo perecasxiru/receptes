@@ -39,11 +39,9 @@ class RecipeAdmin(admin.ModelAdmin):
         return actions
 
     def image_preview(self, obj):
-        if obj.image:
-            img = obj.image.url
-        else:
-            img = "https://via.placeholder.com/640x360"
-        return format_html('<img src="{}" style="width: 100px; height: auto;" />', img)
+        if not obj.image:
+            return "—"
+        return format_html('<img src="{}" style="width: 100px; height: auto;" />', obj.image.url)
 
     def tags_preview(self, obj):
         return ' | '.join([tag.name for tag in obj.tags.all()])
@@ -73,12 +71,10 @@ class MakeAdmin(admin.ModelAdmin):
 
     def image_preview(self, obj):
         if obj.image:
-            img = obj.image.url
-        elif obj.recipe.image:
-            img = obj.recipe.image.url
-        else:
-            img = "https://via.placeholder.com/640x360"
-        return format_html('<img src="{}" style="width: 100px; height: auto;" /><br><small>FROM RECIPE</small>', img)
+            return format_html('<img src="{}" style="width: 100px; height: auto;" />', obj.image.url)
+        if obj.recipe.image:
+            return format_html('<img src="{}" style="width: 100px; height: auto;" /><br><small>FROM RECIPE</small>', obj.recipe.image.url)
+        return "—"
 
 
     image_preview.short_description = "Image Preview"  # Admin column label

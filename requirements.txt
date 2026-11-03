@@ -3,11 +3,8 @@ Django==5.2.18
 django-ckeditor-5==0.2.20
 django-js-asset==2.2.0
 gunicorn==23.0.0
-narwhals==1.28.0
-networkx==3.2.1
 packaging==24.2
 pillow==11.1.0
-plotly==6.0.0
 psycopg==3.2.5
 psycopg-binary==3.2.5
 python-dotenv==1.0.1

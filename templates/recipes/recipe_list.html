@@ -1,139 +1,131 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recipes</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+{% extends "base.html" %}
 
+{% block head %}
     <style>
-        .card:hover {
-            transform: scale(1.05);
-            transition: transform 0.2s;
+        .hero h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); }
+        .search-box {
+            max-width: 560px;
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: .35rem .35rem .35rem 1.2rem;
+            box-shadow: 0 6px 24px rgba(43, 37, 32, .06);
         }
-        .card a {
+        .search-box input { border: 0; background: transparent; outline: none; flex: 1; min-width: 0; }
+        .search-box .btn { border-radius: 999px; }
+
+        .chips { display: flex; flex-wrap: wrap; gap: .5rem; }
+
+        .recipe-card {
+            display: block;
+            height: 100%;
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            overflow: hidden;
+            color: inherit;
             text-decoration: none;
+            transition: transform .2s, box-shadow .2s;
+        }
+        .recipe-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(43, 37, 32, .10);
             color: inherit;
         }
-        .card-img-top {
-            height: 200px;
+        .recipe-card .thumb {
+            aspect-ratio: 4 / 3;
+            width: 100%;
             object-fit: cover;
+            display: block;
         }
-
-        .list-group a .list-group-item {
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 4px 10px;
+        /* Recipes without a photo get a coloured tile with their initial */
+        .recipe-card .thumb-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, .9);
+            background: linear-gradient(135deg, #e3a27f, #c4572e);
         }
-        .list-group a {
-            margin-bottom: 5px;
-            text-decoration: none;
-        }
-        .list-group  {
-            cursor: pointer;
-        }
-        .list-group a .list-group-item.active{
-            background-color: var(--bs-secondary);
-            border: 3px solid black;
-            color: white;
-        }
+        .col:nth-child(4n+2) .thumb-empty { background: linear-gradient(135deg, #b9c48f, #6f8a3c); }
+        .col:nth-child(4n+3) .thumb-empty { background: linear-gradient(135deg, #f0c873, #d99a2b); }
+        .col:nth-child(4n+4) .thumb-empty { background: linear-gradient(135deg, #c9a3a0, #8f5b57); }
+        .recipe-card .title { font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 1.1rem; line-height: 1.25; }
+        .recipe-card .meta { color: var(--muted); font-size: .8rem; }
     </style>
+{% endblock %}
 
-</head>
-<body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">Receptes</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="/">Home</a>
-                    </li>
-                    {% if is_debug %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'recipe_create' %}">Create Recipe</a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
+{% block content %}
+    <section class="hero mb-4">
+        <h1 class="mb-2">Què cuinem avui?</h1>
+        <p class="text-body-secondary mb-4">{{ page_obj.paginator.count }} recept{{ page_obj.paginator.count|pluralize:"a,es" }}{% if selected_tag %} a <strong>{{ selected_tag }}</strong>{% endif %}{% if search_query %} per a «{{ search_query }}»{% endif %}</p>
+        <form method="get" action="{% url 'recipe_list' %}" class="search-box d-flex align-items-center" role="search">
+            {% if selected_tag %}<input type="hidden" name="tag" value="{{ selected_tag }}">{% endif %}
+            <input type="search" name="search" placeholder="Busca per nom o ingredient…" value="{{ search_query }}" aria-label="Buscar receptes">
+            <button class="btn btn-accent px-4" type="submit">Buscar</button>
+        </form>
+    </section>
+
+    <nav class="chips mb-4" aria-label="Etiquetes">
+        <a href="{% url 'recipe_list' %}{% if search_query %}?search={{ search_query|urlencode }}{% endif %}" class="chip {% if not selected_tag %}active{% endif %}">Totes</a>
+        {% for tag in tags %}
+            <a href="{% url 'recipe_list' %}?tag={{ tag.name|urlencode }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="chip {% if tag.name == selected_tag %}active{% endif %}">{{ tag }}</a>
+        {% endfor %}
     </nav>
-    <div class="container mt-5">
-        <div class="row">
-            <div class="col-md-2">
-                <h4>Filtrar per etiqueta</h4>
-                <ul class="list-group mb-4">
-                    <a href="{% url 'recipe_list' %}">
-                        <li class="list-group-item {% if not selected_tag %}active{% endif %}">
-                        Tots
-                        </li>
-                    </a>
-                    {% for tag in tags %}
-                        <a href="{% url 'recipe_list' %}?tag={{ tag }}">
-                            <li class="list-group-item {% if tag == selected_tag %}active{% endif %}">
-                                {{ tag }}
-                            </li>
-                        </a>
-                    {% endfor %}
-                </ul>
-                <h4>Buscar</h4>
-                <form method="get" action="{% url 'recipe_list' %}">
-                    <div class="input-group mb-4">
-                        <input type="text" name="search" class="form-control" placeholder="Buscar receptes" value="{{ search_query }}">
-                        <button class="btn btn-outline-secondary" type="submit">Search</button>
-                    </div>
-                </form>
-            </div>
-            <div class="col-md-9">
-                <div class="row">
-                    {% for recipe in page_obj %}
-                        <div class="col-md-4 mb-4">
-                            <a href="{% url 'recipe_detail' recipe.slug %}" style="text-decoration: none">
-                                <div class="card">
-                                    {% if recipe.image %}
-                                        <img src="{{ recipe.image.url }}" class="card-img-top" alt="Image of {{ recipe.name }}">
-                                    {% endif %}
-                                    <div class="card-body">
-                                        <h5 class="card-title">{{ recipe.name }}</h5>
-                                        {% for tag in recipe.tags.all %}
-                                            <span class="badge bg-secondary">{{ tag }}</span>
-                                        {% endfor %}
-                                    </div>
-                                </div>
-                            </a>
+
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 g-md-4">
+        {% for recipe in page_obj %}
+            <div class="col">
+                <a href="{% url 'recipe_detail' recipe.slug %}" class="recipe-card">
+                    {% if recipe.image %}
+                        <img src="{{ recipe.image.url }}" class="thumb" alt="{{ recipe.name }}" loading="lazy">
+                    {% else %}
+                        <div class="thumb thumb-empty" aria-hidden="true">{{ recipe.name|first|upper }}</div>
+                    {% endif %}
+                    <div class="p-3">
+                        <div class="title mb-2">{{ recipe.name }}</div>
+                        <div class="d-flex flex-wrap gap-1 align-items-center">
+                            {% for tag in recipe.tags.all %}
+                                <span class="chip chip-sm">{{ tag }}</span>
+                            {% endfor %}
+                            {% if recipe.prep_time %}<span class="meta ms-auto">{{ recipe.prep_time }} min</span>{% endif %}
                         </div>
-                    {% endfor %}
-                </div>
-                <nav aria-label="Page navigation">
-                    <ul class="pagination">
-                        {% if page_obj.has_previous %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_tag %}&tag={{ selected_tag }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Previous">
-                                    <span aria-hidden="true">&laquo;</span>
-                                </a>
-                            </li>
-                        {% endif %}
-                        {% for num in page_obj.paginator.page_range %}
-                            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
-                                <a class="page-link" href="?page={{ num }}{% if selected_tag %}&tag={{ selected_tag }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
-                            </li>
-                        {% endfor %}
-                        {% if page_obj.has_next %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_tag %}&tag={{ selected_tag }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Next">
-                                    <span aria-hidden="true">&raquo;</span>
-                                </a>
-                            </li>
-                        {% endif %}
-                    </ul>
-                </nav>
+                    </div>
+                </a>
             </div>
-        </div>
+        {% empty %}
+            <div class="col-12 w-100 text-center py-5">
+                <p class="serif fs-4 mb-1">No s'ha trobat cap recepta</p>
+                <a href="{% url 'recipe_list' %}">Veure-les totes</a>
+            </div>
+        {% endfor %}
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-</body>
-</html>
+
+    {% if page_obj.has_other_pages %}
+        <nav aria-label="Paginació" class="mt-5">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="{% querystring page=page_obj.previous_page_number %}" aria-label="Anterior">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link" href="{% querystring page=num %}">{{ num }}</a>
+                    </li>
+                {% endfor %}
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{% querystring page=page_obj.next_page_number %}" aria-label="Següent">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+{% endblock %}
