@@ -23,7 +23,7 @@ def get_recipe_list(request):
         recipes = recipes.filter(Q(name__icontains=search_query) | Q(ingredients__icontains=search_query))
 
     # Pagination
-    paginator = Paginator(recipes, 30)
+    paginator = Paginator(recipes, 36)  # Divisible by 2, 3 and 4 columns, so the last row is full
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
