@@ -33,6 +33,7 @@
         /* Space a subheading from the list above it (the first one may follow the scaler instead) */
         ul + .section-title { margin-top: 1.5rem; }
         ol + .section-title { margin-top: .5rem; }  /* Steps already have bottom padding */
+        .scaler + .section-title { margin-top: 1rem; }
 
         /* Ingredients: tap to tick off while cooking */
         .ingredients ul { list-style: none; padding: 0; margin: 0; }
@@ -161,9 +162,11 @@
                                 {% elif section.title %}
                                     <h3 class="section-title">{{ section.title }}</h3>
                                 {% endif %}
-                                <ul>
-                                    {% for item in section.items %}<li>{{ item|quantities }}</li>{% endfor %}
-                                </ul>
+                                {% if section.items %}
+                                    <ul>
+                                        {% for item in section.items %}<li>{{ item|quantities }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
                             {% endfor %}
                         {% endwith %}
                     </section>
@@ -175,9 +178,11 @@
                         <h2>Preparació</h2>
                         {% for section in recipe.preparation|sections %}
                             {% if section.title %}<h3 class="section-title">{{ section.title }}</h3>{% endif %}
-                            <ol>
-                                {% for item in section.items %}<li>{{ item|quantities }}</li>{% endfor %}
-                            </ol>
+                            {% if section.items %}
+                                <ol>
+                                    {% for item in section.items %}<li>{{ item|quantities }}</li>{% endfor %}
+                                </ol>
+                            {% endif %}
                         {% endfor %}
                     </section>
                 </div>
