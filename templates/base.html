@@ -120,7 +120,7 @@
             white-space: nowrap;
             transition: background .15s, color .15s, border-color .15s;
         }
-        a.chip:hover { border-color: var(--accent); color: var(--accent); }
+        a.chip:not(.active):hover { border-color: var(--accent); color: var(--accent); }
         .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
         .chip-sm { padding: .1rem .55rem; font-size: .75rem; background: var(--accent-soft); border-color: transparent; color: var(--accent-ink); }
 
