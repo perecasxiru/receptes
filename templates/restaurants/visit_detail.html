@@ -25,6 +25,16 @@
         .dish-notes { color: var(--muted); margin-top: .25rem; }
         .dish-photo { width: 140px; height: 140px; object-fit: cover; border-radius: 12px; flex-shrink: 0; }
         @media (max-width: 575.98px) { .dish-photo { width: 96px; height: 96px; } }
+
+        /* Photo of the printed menu: a thumbnail that opens full size */
+        .menu-photo-link { display: inline-flex; align-items: center; gap: .9rem; color: inherit; text-decoration: none; }
+        .menu-photo-link img {
+            width: 88px; height: 116px; object-fit: cover; object-position: top;
+            border-radius: 8px; border: 1px solid var(--line); transition: transform .2s, box-shadow .2s;
+        }
+        .menu-photo-link:hover img { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(var(--shadow-rgb), .15); }
+        .menu-photo-link:hover .menu-photo-label { color: var(--accent); }
+        .menu-photo-label { font-weight: 600; }
     </style>
 {% endblock %}
 
@@ -51,6 +61,12 @@
     {% if dishes %}
         <section class="panel">
             <h2>{% if dishes|length > 1 %}Plats{% else %}El plat{% endif %}</h2>
+            {% if visit.menu_photo %}
+                <a href="{{ visit.menu_photo.url }}" target="_blank" class="menu-photo-link mb-4">
+                    <img src="{{ visit.menu_photo.url }}" alt="Carta de {{ visit.name }}" loading="lazy">
+                    <span><span class="menu-photo-label d-block">Veure la carta</span><span class="small text-body-secondary">Obre la foto sencera ↗</span></span>
+                </a>
+            {% endif %}
             {% for dish in dishes %}
                 <div class="dish">
                     {% if dishes|length > 1 %}<div class="dish-num">{{ forloop.counter }}</div>{% endif %}
@@ -63,6 +79,14 @@
                     {% endif %}
                 </div>
             {% endfor %}
+        </section>
+    {% elif visit.menu_photo %}
+        <section class="panel">
+            <h2>La carta</h2>
+            <a href="{{ visit.menu_photo.url }}" target="_blank" class="menu-photo-link">
+                <img src="{{ visit.menu_photo.url }}" alt="Carta de {{ visit.name }}" loading="lazy">
+                <span><span class="menu-photo-label d-block">Veure la carta</span><span class="small text-body-secondary">Obre la foto sencera ↗</span></span>
+            </a>
         </section>
     {% else %}
         <div class="panel text-center text-body-secondary">Encara no hi ha cap plat apuntat.</div>

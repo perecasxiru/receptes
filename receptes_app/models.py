@@ -53,24 +53,30 @@ def delete_file_on_commit(field_file, name):
 # -------------------------------
 
 class ResizableImageMixin:
-    def resize_image_field(self, field_name):
+    # Image fields to resize, with their maximum size; override per model
+    image_fields = {'image': (800, 800)}
+
+    def resize_image_field(self, field_name, max_size=(800, 800)):
         image_field = getattr(self, field_name)
         # Only process freshly uploaded files; already stored images are left untouched
         if image_field and not image_field._committed:
-            resized = resize_image(image_field)
+            resized = resize_image(image_field, max_size)
             name = os.path.splitext(image_field.name)[0] + '.jpg'
             image_field.save(name, resized, save=False)
 
     def save_with_image(self, *args, **kwargs):
-        """Resize a new image and delete the previous file if it was replaced or cleared."""
-        old_name = None
+        """Resize new images and delete previous files that were replaced or cleared."""
+        fields = list(self.image_fields)
+        old_names = {}
         if self.pk:
-            old_name = type(self).objects.filter(pk=self.pk).values_list('image', flat=True).first()
-        if self.image:
-            self.resize_image_field('image')
+            old_names = type(self).objects.filter(pk=self.pk).values(*fields).first() or {}
+        for field, max_size in self.image_fields.items():
+            self.resize_image_field(field, max_size)
         models.Model.save(self, *args, **kwargs)  # Mixin is listed after Model, so super() would skip it
-        if old_name and old_name != self.image.name:
-            delete_file_on_commit(self.image, old_name)
+        for field in fields:
+            old_name, current = old_names.get(field), getattr(self, field)
+            if old_name and old_name != current.name:
+                delete_file_on_commit(current, old_name)
 
 # -------------------------------
 # Core Models
@@ -200,9 +206,15 @@ class RestaurantVisit(models.Model, ResizableImageMixin):
     image = models.ImageField(
         "foto de portada", upload_to=random_file_name, null=True, blank=True,
         help_text="Opcional: si no n'hi ha, es fan servir les fotos dels plats.")
+    menu_photo = models.ImageField(
+        "foto de la carta", upload_to=random_file_name, null=True, blank=True,
+        help_text="Opcional: una foto del menú imprès. Es guarda a més resolució perquè es pugui llegir.")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    # Menus are mostly small print, so keep them large enough to read
+    image_fields = {'image': (800, 800), 'menu_photo': (2000, 2000)}
 
     class Meta:
         ordering = ['-date', '-created_at']
@@ -253,5 +265,7 @@ class Dish(models.Model, ResizableImageMixin):
 @receiver(post_delete, sender=RestaurantVisit)
 @receiver(post_delete, sender=Dish)
 def delete_image_file(sender, instance, **kwargs):
-    if instance.image:
-        delete_file_on_commit(instance.image, instance.image.name)
+    for field in instance.image_fields:
+        file = getattr(instance, field)
+        if file:
+            delete_file_on_commit(file, file.name)

@@ -21,6 +21,7 @@ class Command(BaseCommand):
         used = set(Recipe.objects.exclude(image='').values_list('image', flat=True))
         for model in (Make, RestaurantVisit, Dish):
             used |= set(model.objects.exclude(image='').values_list('image', flat=True))
+        used |= set(RestaurantVisit.objects.exclude(menu_photo='').values_list('menu_photo', flat=True))
 
         # Rich text may embed uploaded images too; keep anything mentioned there
         rich_text = ' '.join(
