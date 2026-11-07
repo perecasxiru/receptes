@@ -19,7 +19,7 @@
             border-radius: 20px;
         }
         .panel {
-            background: #fff;
+            background: var(--surface);
             border: 1px solid var(--line);
             border-radius: 16px;
             padding: 1.5rem;
@@ -64,7 +64,7 @@
             height: 2rem;
             border-radius: 50%;
             background: var(--accent-soft);
-            color: var(--accent-dark);
+            color: var(--accent-ink);
             font-weight: 600;
             display: flex;
             align-items: center;
@@ -89,11 +89,11 @@
         }
         .scaler button {
             width: 1.9rem; height: 1.9rem; border-radius: 50%; border: 1px solid var(--accent-soft);
-            background: var(--accent-soft); color: var(--accent-dark); font-weight: 700; line-height: 1;
+            background: var(--accent-soft); color: var(--accent-ink); font-weight: 700; line-height: 1;
         }
         .scaler button:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
         .scaler input {
-            width: 3.6rem; text-align: center; font-weight: 700; color: var(--ink);
+            width: 3.6rem; text-align: center; font-weight: 700; color: var(--ink); background: var(--surface);
             border: 1px solid var(--line); border-radius: 8px; padding: .15rem .25rem;
             -moz-appearance: textfield;
         }
@@ -101,7 +101,7 @@
         .scaler .reset { background: none; border: 0; width: auto; height: auto; color: var(--muted); text-transform: none; letter-spacing: 0; font-weight: 500; text-decoration: underline; }
         .scaler .reset:hover { background: none; color: var(--accent); }
         /* Outline instead of padding so "300g" doesn't get a gap */
-        .qty.scaled { color: var(--accent-dark); font-weight: 600; background: var(--accent-soft); border-radius: 3px; box-shadow: 0 0 0 2px var(--accent-soft); }
+        .qty.scaled { color: var(--accent-ink); font-weight: 600; background: var(--accent-soft); border-radius: 3px; box-shadow: 0 0 0 2px var(--accent-soft); }
     </style>
 {% endblock %}
 

@@ -4,7 +4,7 @@
 
 {% block head %}
     <style>
-        .panel { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 1.5rem; }
+        .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 1.5rem; }
         .field-label { font-weight: 600; font-size: .95rem; }
         /* Tag/tool checkboxes as selectable chips */
         .checks > div { display: flex; flex-wrap: wrap; gap: .5rem; }
@@ -13,7 +13,7 @@
             padding: .3rem .8rem; border: 1px solid var(--line); border-radius: 999px;
             cursor: pointer; font-size: .875rem;
         }
-        .checks > div label:has(input:checked) { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-dark); }
+        .checks > div label:has(input:checked) { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-ink); }
         .checks input { accent-color: var(--accent); }
     </style>
 {% endblock %}
