@@ -1,6 +1,8 @@
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.db.models import Max
 from django.shortcuts import redirect
 from django.utils.html import format_html
+from .forms import RestaurantVisitAdminForm
 from .models import Tag, Tool, Recipe, Menu, Make, RestaurantVisit, Dish
 
 # Register the Tag model
@@ -102,14 +104,38 @@ class DishInline(admin.TabularInline):
 
 @admin.register(RestaurantVisit)
 class RestaurantVisitAdmin(admin.ModelAdmin):
+    form = RestaurantVisitAdminForm
     list_display = ('name', 'city', 'date', 'menu_name')
     prepopulated_fields = {"slug": ("name",)}
     list_filter = ('date', 'city')
     search_fields = ('name', 'city', 'menu_name', 'notes', 'dishes__name')
     inlines = [DishInline]
 
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        # Each bulk-uploaded photo becomes a dish, appended after the existing ones
+        visit = form.instance
+        photos = form.sorted_dish_photos()
+        last_order = visit.dishes.aggregate(Max('order'))['order__max'] or 0
+        count = visit.dishes.count()
+        for i, photo in enumerate(photos, start=1):
+            Dish.objects.create(visit=visit, name=f"Plat {count + i}", order=last_order + i, image=photo)
+        request.bulk_dishes_added = len(photos)
+
+    def _name_new_dishes(self, request, obj):
+        added = getattr(request, 'bulk_dishes_added', 0)
+        if not added:
+            return None
+        messages.success(request, f"S'han afegit {added} plat{'s' if added != 1 else ''}. Posa'ls nom i torna a desar.")
+        return redirect('admin:receptes_app_restaurantvisit_change', obj.pk)
+
     def response_add(self, request, obj, post_url_continue=None):
+        if response := self._name_new_dishes(request, obj):
+            return response
         # Plain "Save" shows the new visit on the site
         if '_continue' not in request.POST and '_addanother' not in request.POST:
             return redirect(obj)
         return super().response_add(request, obj, post_url_continue)
+
+    def response_change(self, request, obj):
+        return self._name_new_dishes(request, obj) or super().response_change(request, obj)

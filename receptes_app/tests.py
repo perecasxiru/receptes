@@ -226,6 +226,62 @@ class RestaurantTests(TestCase):
     def test_detail_404(self):
         self.assertEqual(self.client.get(reverse('visit_detail', args=["no-existeix"])).status_code, 404)
 
+    def test_menu_photo_kept_large_and_shown(self):
+        self.visit.menu_photo = make_image(size=(3000, 4000))
+        self.visit.save()
+        with Image.open(self.visit.menu_photo.path) as img:
+            self.assertEqual(img.size, (1500, 2000))
+        self.assertEqual(len(self.visit.photos), 1)  # Not part of the collage
+        self.assertContains(self.client.get(self.visit.get_absolute_url()), self.visit.menu_photo.url)
+
+        path = self.visit.menu_photo.path
+        with self.captureOnCommitCallbacks(execute=True):
+            self.visit.delete()
+        self.assertFalse(os.path.exists(path))
+
+    def test_bulk_dish_photos_in_admin(self):
+        def photo(name, colour, taken=None):
+            img, buffer = Image.new('RGB', (1200, 900), colour), BytesIO()
+            exif = img.getexif()
+            if taken:
+                exif[306] = taken  # DateTime
+            img.save(buffer, 'JPEG', exif=exif)
+            return SimpleUploadedFile(name, buffer.getvalue(), content_type='image/jpeg')
+
+        self.client.force_login(User.objects.create_superuser("admin", "a@a.a", "pass"))
+        url = reverse('admin:receptes_app_restaurantvisit_change', args=[self.visit.pk])
+        existing = list(self.visit.dishes.all())
+        data = {
+            'name': self.visit.name, 'slug': self.visit.slug, 'city': self.visit.city,
+            'date': '2026-10-04', 'menu_name': self.visit.menu_name, 'notes': '',
+            'dishes-TOTAL_FORMS': len(existing), 'dishes-INITIAL_FORMS': len(existing),
+            'dishes-MIN_NUM_FORMS': 0, 'dishes-MAX_NUM_FORMS': 1000,
+            'dish_photos': [
+                photo('c.jpg', 'green', '2026:10:04 22:10:00'),
+                photo('undated.jpg', 'blue'),
+                photo('a.jpg', 'red', '2026:10:04 20:30:00'),
+            ],
+        }
+        for i, dish in enumerate(existing):
+            data.update({f'dishes-{i}-id': dish.pk, f'dishes-{i}-visit': self.visit.pk,
+                         f'dishes-{i}-order': dish.order, f'dishes-{i}-name': dish.name})
+
+        response = self.client.post(url, data)
+        self.assertRedirects(response, url)  # Back to the form to name the new dishes
+
+        new = list(self.visit.dishes.all())[2:]
+        self.assertEqual([d.name for d in new], ["Plat 3", "Plat 4", "Plat 5"])
+        self.assertEqual([d.order for d in new], [3, 4, 5])
+        # Taken-at order, undated last; images resized like any dish photo
+        sizes, colours = [], []
+        for d in new:
+            with Image.open(d.image.path) as img:
+                sizes.append(img.size)
+                pixel = img.getpixel((10, 10))
+                colours.append(('red', 'green', 'blue')[pixel.index(max(pixel))])
+        self.assertEqual(colours, ['red', 'green', 'blue'])
+        self.assertEqual(sizes, [(800, 600)] * 3)
+
     def test_dish_image_removed_with_visit(self):
         path = self.visit.dishes.get(order=1).image.path
         with self.captureOnCommitCallbacks(execute=True):
