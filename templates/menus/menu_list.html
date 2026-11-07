@@ -2,39 +2,6 @@
 
 {% block title %}Menús · Receptes{% endblock %}
 
-{% block head %}
-    <style>
-        .menu-card {
-            display: block;
-            height: 100%;
-            background: var(--surface);
-            border: 1px solid var(--line);
-            border-radius: 16px;
-            overflow: hidden;
-            color: inherit;
-            text-decoration: none;
-            transition: transform .2s, box-shadow .2s;
-        }
-        .menu-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(var(--shadow-rgb), .10); color: inherit; }
-        /* Collage of up to four recipe photos */
-        .collage { display: grid; grid-template-columns: 1fr 1fr; aspect-ratio: 2 / 1; background: var(--accent-soft); }
-        .collage img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .collage img:only-child { grid-column: span 2; }
-        /* No photos at all: coloured tile with the menu's initial */
-        .collage:empty {
-            display: flex; align-items: center; justify-content: center;
-            background: linear-gradient(135deg, #e3a27f, #c4572e);
-        }
-        .collage:empty::before {
-            content: attr(data-initial);
-            font-family: 'Fraunces', Georgia, serif; font-size: 3.5rem; font-weight: 700;
-            color: rgba(255, 255, 255, .9);
-        }
-        .menu-date { color: var(--accent); font-weight: 600; font-size: .85rem; text-transform: uppercase; letter-spacing: .04em; }
-        .menu-card .dishes { color: var(--muted); font-size: .9rem; }
-    </style>
-{% endblock %}
-
 {% block content %}
     <section class="mb-4">
         <h1 class="mb-2">Menús</h1>
@@ -55,7 +22,7 @@
                     </div>
                     {% endspaceless %}
                     <div class="p-3">
-                        <div class="menu-date mb-1">{{ menu.date|date:"d/m/Y" }}</div>
+                        <div class="card-date mb-1">{{ menu.date|date:"d/m/Y" }}</div>
                         <div class="serif fs-5 mb-1">{{ menu.name }}</div>
                         <div class="dishes">{{ menu.recipes.all|join:" · " }}</div>
                     </div>

@@ -1,4 +1,4 @@
-from .models import Tag, Recipe, Menu
+from .models import Tag, Recipe, Menu, RestaurantVisit
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core.paginator import Paginator
 from django.db.models import Q
@@ -82,3 +82,15 @@ def get_menu_detail(request, slug):
     menu = get_object_or_404(Menu, slug=slug)
     recipes = menu.recipes.prefetch_related('tags', 'makes')
     return render(request, 'menus/menu_detail.html', {'menu': menu, 'recipes': recipes})
+
+
+def get_visit_list(request):
+    visits = RestaurantVisit.objects.prefetch_related('dishes')
+    paginator = Paginator(visits, 24)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    return render(request, 'restaurants/visit_list.html', {'page_obj': page_obj})
+
+
+def get_visit_detail(request, slug):
+    visit = get_object_or_404(RestaurantVisit, slug=slug)
+    return render(request, 'restaurants/visit_detail.html', {'visit': visit, 'dishes': visit.dishes.all()})

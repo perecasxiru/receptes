@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Restaurants · Receptes{% endblock %}
+
+{% block content %}
+    <section class="mb-4">
+        <h1 class="mb-2">Restaurants</h1>
+        <p class="text-body-secondary">Menús degustació i plats que hem tastat fora de casa.</p>
+    </section>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for visit in page_obj %}
+            <div class="col">
+                <a href="{{ visit.get_absolute_url }}" class="menu-card">
+                    {% spaceless %}
+                    <div class="collage" data-initial="{{ visit.name|first|upper }}">
+                        {% for photo in visit.photos|slice:":4" %}
+                            <img src="{{ photo.url }}" alt="" loading="lazy">
+                        {% endfor %}
+                    </div>
+                    {% endspaceless %}
+                    <div class="p-3">
+                        <div class="card-date mb-1">{{ visit.date|date:"d/m/Y" }}{% if visit.city %} · {{ visit.city }}{% endif %}</div>
+                        <div class="serif fs-5 mb-1">{{ visit.name }}</div>
+                        <div class="card-meta">
+                            {% if visit.menu_name %}{{ visit.menu_name }}{% else %}{{ visit.dishes.all|join:" · " }}{% endif %}
+                        </div>
+                    </div>
+                </a>
+            </div>
+        {% empty %}
+            <div class="col-12 w-100 text-center py-5">
+                <p class="serif fs-4 mb-1">Encara no hi ha cap restaurant</p>
+                {% if user.is_staff %}<a href="{% url 'admin:receptes_app_restaurantvisit_add' %}">Afegir-ne un</a>{% endif %}
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if page_obj.has_other_pages %}
+        <nav aria-label="Paginació" class="mt-5">
+            <ul class="pagination justify-content-center">
+                {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link" href="{% querystring page=num %}">{{ num }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </nav>
+    {% endif %}
+{% endblock %}

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.shortcuts import redirect
 from django.utils.html import format_html
-from .models import Tag, Tool, Recipe, Menu, Make
+from .models import Tag, Tool, Recipe, Menu, Make, RestaurantVisit, Dish
 
 # Register the Tag model
 @admin.register(Tag)
@@ -85,3 +85,31 @@ class MakeAdmin(admin.ModelAdmin):
 
 
     image_preview.short_description = "Image Preview"  # Admin column label
+
+
+class DishInline(admin.TabularInline):
+    model = Dish
+    fields = ('order', 'name', 'notes', 'image', 'image_preview')
+    readonly_fields = ('image_preview',)
+    extra = 3
+
+    def image_preview(self, obj):
+        if not obj.image:
+            return "—"
+        return format_html('<img src="{}" style="width: 80px; height: auto;" />', obj.image.url)
+    image_preview.short_description = "Preview"
+
+
+@admin.register(RestaurantVisit)
+class RestaurantVisitAdmin(admin.ModelAdmin):
+    list_display = ('name', 'city', 'date', 'menu_name')
+    prepopulated_fields = {"slug": ("name",)}
+    list_filter = ('date', 'city')
+    search_fields = ('name', 'city', 'menu_name', 'notes', 'dishes__name')
+    inlines = [DishInline]
+
+    def response_add(self, request, obj, post_url_continue=None):
+        # Plain "Save" shows the new visit on the site
+        if '_continue' not in request.POST and '_addanother' not in request.POST:
+            return redirect(obj)
+        return super().response_add(request, obj, post_url_continue)

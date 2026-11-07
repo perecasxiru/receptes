@@ -12,7 +12,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from PIL import Image
 
-from .models import Make, Menu, Recipe, Tag
+from .models import Dish, Make, Menu, Recipe, RestaurantVisit, Tag
 from .templatetags.recipe_text import quantities, sections, servings
 
 MEDIA_ROOT = tempfile.mkdtemp()
@@ -193,6 +193,44 @@ class RecipeViewTests(TestCase):
         response = self.client.post(reverse('recipe_create'), {'name': "Una altra", 'slug': self.recipe.slug})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'invalid-feedback d-block')
+
+
+@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+class RestaurantTests(TestCase):
+    def setUp(self):
+        self.visit = RestaurantVisit.objects.create(
+            name="Disfrutar", city="Barcelona", date=datetime.date(2026, 10, 4),
+            menu_name="Menú Festival", notes="Increïble <b>de debò</b>")
+        Dish.objects.create(visit=self.visit, name="Olivas verdes", order=2)
+        Dish.objects.create(visit=self.visit, name="Panchino de caviar", order=1, image=make_image())
+
+    def test_slug_and_photos(self):
+        self.assertEqual(self.visit.slug, "disfrutar")
+        again = RestaurantVisit.objects.create(name="Disfrutar", date=datetime.date(2026, 11, 1))
+        self.assertEqual(again.slug, "disfrutar-2")
+        self.assertEqual(len(self.visit.photos), 1)
+
+    def test_list(self):
+        response = self.client.get(reverse('visit_list'))
+        self.assertContains(response, "Disfrutar")
+        self.assertContains(response, "Menú Festival")
+        self.assertContains(response, reverse('visit_list'))  # Nav link
+
+    def test_detail_orders_dishes_and_escapes_notes(self):
+        response = self.client.get(reverse('visit_detail', args=[self.visit.slug]))
+        content = response.content.decode()
+        self.assertLess(content.index("Panchino de caviar"), content.index("Olivas verdes"))
+        self.assertContains(response, "&lt;b&gt;de debò&lt;/b&gt;")
+        self.assertNotContains(response, "Editar")
+
+    def test_detail_404(self):
+        self.assertEqual(self.client.get(reverse('visit_detail', args=["no-existeix"])).status_code, 404)
+
+    def test_dish_image_removed_with_visit(self):
+        path = self.visit.dishes.get(order=1).image.path
+        with self.captureOnCommitCallbacks(execute=True):
+            self.visit.delete()
+        self.assertFalse(os.path.exists(path))
 
 
 class PlainTextTests(TestCase):

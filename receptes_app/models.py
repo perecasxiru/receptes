@@ -186,8 +186,72 @@ class Make(models.Model, ResizableImageMixin):
         self.save_with_image(*args, **kwargs)
 
 
+class RestaurantVisit(models.Model, ResizableImageMixin):
+    """A meal out: a tasting menu (many dishes) or a single memorable plate."""
+    name = models.CharField("restaurant", max_length=100)
+    slug = models.SlugField(max_length=110, unique=True, blank=True)
+    city = models.CharField("ciutat", max_length=100, blank=True, default='')
+    date = models.DateField("data")
+    menu_name = models.CharField(
+        "menú", max_length=150, blank=True, default='',
+        help_text="Opcional, p. ex. «Menú degustació de tardor».")
+    notes = models.TextField("notes", blank=True, default='')
+    link = models.URLField("enllaç", null=True, blank=True)
+    image = models.ImageField(
+        "foto de portada", upload_to=random_file_name, null=True, blank=True,
+        help_text="Opcional: si no n'hi ha, es fan servir les fotos dels plats.")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-date', '-created_at']
+        verbose_name = "visita a restaurant"
+        verbose_name_plural = "visites a restaurants"
+
+    def __str__(self):
+        return f"{self.name} ({self.date:%d/%m/%Y})" if self.date else self.name
+
+    def get_absolute_url(self):
+        return reverse('visit_detail', args=[self.slug])
+
+    @property
+    def photos(self):
+        """Cover photo first, then dish photos; prefetch 'dishes' in list views."""
+        photos = [self.image] if self.image else []
+        return photos + [dish.image for dish in self.dishes.all() if dish.image]
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = generate_unique_slug(self, RestaurantVisit)
+        self.notes = (self.notes or '').strip()
+        self.save_with_image(*args, **kwargs)
+
+
+class Dish(models.Model, ResizableImageMixin):
+    visit = models.ForeignKey(RestaurantVisit, on_delete=models.CASCADE, related_name="dishes")
+    name = models.CharField("plat", max_length=150)
+    notes = models.TextField("notes", blank=True, default='')
+    image = models.ImageField("foto", upload_to=random_file_name, null=True, blank=True)
+    order = models.PositiveSmallIntegerField("ordre", default=0)
+
+    class Meta:
+        ordering = ['order', 'pk']
+        verbose_name = "plat"
+        verbose_name_plural = "plats"
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        self.notes = (self.notes or '').strip()
+        self.save_with_image(*args, **kwargs)
+
+
 @receiver(post_delete, sender=Recipe)
 @receiver(post_delete, sender=Make)
+@receiver(post_delete, sender=RestaurantVisit)
+@receiver(post_delete, sender=Dish)
 def delete_image_file(sender, instance, **kwargs):
     if instance.image:
         delete_file_on_commit(instance.image, instance.image.name)

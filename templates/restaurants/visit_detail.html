@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}{{ visit.name }} · Restaurants{% endblock %}
+
+{% block head %}
+    <meta property="og:title" content="{{ visit.name }}">
+    {% with cover=visit.photos|first %}{% if cover %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ cover.url }}">{% endif %}{% endwith %}
+    <style>
+        .visit-title { font-size: clamp(2rem, 5vw, 3.2rem); }
+        .hero-img { width: 100%; max-height: 460px; object-fit: cover; border-radius: 20px; }
+        .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 1.5rem; }
+        .panel h2 { font-size: 1.4rem; margin-bottom: 1rem; }
+
+        /* Courses, numbered in order */
+        .dish { display: flex; gap: 1rem; align-items: flex-start; padding: 1.1rem 0; border-top: 1px dashed var(--line); }
+        .dish:first-of-type { border-top: 0; padding-top: 0; }
+        .dish:last-of-type { padding-bottom: 0; }
+        .dish-num {
+            flex-shrink: 0; width: 2rem; height: 2rem; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--accent-soft); color: var(--accent-ink); font-weight: 600;
+        }
+        .dish-body { flex: 1; min-width: 0; }
+        .dish-name { font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 1.15rem; line-height: 1.3; }
+        .dish-notes { color: var(--muted); margin-top: .25rem; }
+        .dish-photo { width: 140px; height: 140px; object-fit: cover; border-radius: 12px; flex-shrink: 0; }
+        @media (max-width: 575.98px) { .dish-photo { width: 96px; height: 96px; } }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <a href="{% url 'visit_list' %}" class="text-body-secondary text-decoration-none small">← Tots els restaurants</a>
+
+    <header class="mt-3 mb-4">
+        <div class="card-date mb-1">{{ visit.date|date:"d/m/Y" }}{% if visit.city %} · {{ visit.city }}{% endif %}</div>
+        <h1 class="visit-title mb-2">{{ visit.name }}</h1>
+        {% if visit.menu_name %}<p class="serif fs-5 text-body-secondary mb-3">{{ visit.menu_name }}</p>{% endif %}
+        {% if visit.notes %}<div class="text-body-secondary" style="max-width: 720px">{{ visit.notes|urlize|linebreaks }}</div>{% endif %}
+        <div class="d-flex flex-wrap align-items-center gap-3">
+            {% if visit.link %}<a href="{{ visit.link }}" target="_blank" rel="noopener noreferrer">Web del restaurant ↗</a>{% endif %}
+            {% if user.is_staff %}
+                <a href="{% url 'admin:receptes_app_restaurantvisit_change' visit.pk %}" class="btn btn-soft btn-sm">Editar</a>
+            {% endif %}
+        </div>
+    </header>
+
+    {% if visit.image %}
+        <img src="{{ visit.image.url }}" alt="{{ visit.name }}" class="hero-img mb-4 mb-md-5">
+    {% endif %}
+
+    {% if dishes %}
+        <section class="panel">
+            <h2>{% if dishes|length > 1 %}Plats{% else %}El plat{% endif %}</h2>
+            {% for dish in dishes %}
+                <div class="dish">
+                    {% if dishes|length > 1 %}<div class="dish-num">{{ forloop.counter }}</div>{% endif %}
+                    <div class="dish-body">
+                        <div class="dish-name">{{ dish.name }}</div>
+                        {% if dish.notes %}<div class="dish-notes">{{ dish.notes|urlize|linebreaksbr }}</div>{% endif %}
+                    </div>
+                    {% if dish.image %}
+                        <a href="{{ dish.image.url }}" target="_blank"><img src="{{ dish.image.url }}" alt="{{ dish.name }}" class="dish-photo" loading="lazy"></a>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </section>
+    {% else %}
+        <div class="panel text-center text-body-secondary">Encara no hi ha cap plat apuntat.</div>
+    {% endif %}
+{% endblock %}

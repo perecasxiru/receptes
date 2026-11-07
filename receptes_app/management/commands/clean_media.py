@@ -3,11 +3,11 @@ import os
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from receptes_app.models import Recipe, Make, Menu
+from receptes_app.models import Recipe, Make, Menu, RestaurantVisit, Dish
 
 
 class Command(BaseCommand):
-    help = "List (or delete with --delete) files in media/uploads/ that no recipe or make uses."
+    help = "List (or delete with --delete) files in media/uploads/ that nothing uses."
 
     def add_arguments(self, parser):
         parser.add_argument('--delete', action='store_true', help="Actually delete the unused files")
@@ -19,7 +19,8 @@ class Command(BaseCommand):
             return
 
         used = set(Recipe.objects.exclude(image='').values_list('image', flat=True))
-        used |= set(Make.objects.exclude(image='').values_list('image', flat=True))
+        for model in (Make, RestaurantVisit, Dish):
+            used |= set(model.objects.exclude(image='').values_list('image', flat=True))
 
         # Rich text may embed uploaded images too; keep anything mentioned there
         rich_text = ' '.join(
