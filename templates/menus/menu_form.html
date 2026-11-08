@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}{% if menu %}Editar {{ menu.name }}{% else %}Nou menú{% endif %} · Menús{% endblock %}
+
+{% block head %}
+    {% include "forms/_styles.html" %}
+    <style>
+        .recipe-filter { max-width: 320px; }
+        .checks [hidden] { display: none !important; }
+    </style>
+{% endblock %}
+
+{% block content %}
+    {% if menu %}
+        <a href="{{ menu.get_absolute_url }}" class="text-body-secondary text-decoration-none small">← {{ menu.name }}</a>
+        <h1 class="mt-3 mb-4">Editar menú</h1>
+    {% else %}
+        <a href="{% url 'menu_list' %}" class="text-body-secondary text-decoration-none small">← Tots els menús</a>
+        <h1 class="mt-3 mb-4">Nou menú</h1>
+    {% endif %}
+
+    {% include "forms/_errors.html" %}
+
+    <form method="post" class="panel">
+        {% csrf_token %}
+        <div class="row">
+            {% include "forms/_field.html" with f=form.name col="col-md-6" %}
+            {% include "forms/_field.html" with f=form.slug col="col-md-3" %}
+            {% include "forms/_field.html" with f=form.date col="col-md-3" %}
+            {% include "forms/_field.html" with f=form.description %}
+            <div class="col-12 mb-4 checks">
+                <div class="d-flex flex-wrap align-items-center gap-3 mb-2">
+                    <span class="field-label">{{ form.recipes.label }}</span>
+                    <input type="search" class="form-control form-control-sm recipe-filter" placeholder="Filtrar receptes…" data-recipe-filter aria-label="Filtrar receptes">
+                    <span class="small text-body-secondary" data-recipe-count></span>
+                </div>
+                {{ form.recipes }}
+                {% for error in form.recipes.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+            </div>
+        </div>
+        <button type="submit" class="btn btn-accent px-4">Desar menú</button>
+        <a href="{% if menu %}{{ menu.get_absolute_url }}{% else %}{% url 'menu_list' %}{% endif %}" class="btn btn-link text-body-secondary">Cancel·lar</a>
+    </form>
+{% endblock %}
+
+{% block scripts %}
+    {% include "forms/_slug_script.html" %}
+    <script>
+        (() => {
+            const filter = document.querySelector('[data-recipe-filter]');
+            const count = document.querySelector('[data-recipe-count]');
+            const chips = [...document.querySelectorAll('.checks input[name="recipes"]')].map((input) => input.closest('label').parentElement);
+            const plain = (text) => text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+            const update = () => {
+                const selected = chips.filter((chip) => chip.querySelector('input').checked).length;
+                count.textContent = selected ? `${selected} triada${selected === 1 ? '' : 'es'}` : '';
+            };
+
+            // Typing narrows the list; chosen recipes always stay visible
+            filter.addEventListener('input', () => {
+                const query = plain(filter.value.trim());
+                for (const chip of chips) {
+                    chip.hidden = query && !chip.querySelector('input').checked && !plain(chip.textContent).includes(query);
+                }
+            });
+            // Enter in the filter shouldn't submit the form
+            filter.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.preventDefault(); });
+            document.addEventListener('change', (e) => { if (e.target.name === 'recipes') update(); });
+            update();
+        })();
+    </script>
+{% endblock %}

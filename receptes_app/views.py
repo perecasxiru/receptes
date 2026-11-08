@@ -1,8 +1,10 @@
 from .models import Tag, Recipe, Menu, RestaurantVisit
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core.paginator import Paginator
-from django.db.models import Q
-from .forms import RecipeForm
+from django.db.models import Max, Q
+from django.contrib import messages
+from django.db import transaction
+from .forms import DishFormSet, MenuForm, RecipeForm, VisitForm
 from django.contrib.admin.views.decorators import staff_member_required
 
 
@@ -78,6 +80,15 @@ def get_menu_list(request):
     return render(request, 'menus/menu_list.html', {'page_obj': page_obj})
 
 
+@staff_member_required
+def edit_menu(request, slug=None):
+    menu = get_object_or_404(Menu, slug=slug) if slug else None
+    form = MenuForm(request.POST or None, instance=menu)
+    if request.method == "POST" and form.is_valid():
+        return redirect(form.save())
+    return render(request, 'menus/menu_form.html', {'form': form, 'menu': menu})
+
+
 def get_menu_detail(request, slug):
     menu = get_object_or_404(Menu, slug=slug)
     recipes = menu.recipes.prefetch_related('tags', 'makes')
@@ -94,3 +105,28 @@ def get_visit_list(request):
 def get_visit_detail(request, slug):
     visit = get_object_or_404(RestaurantVisit, slug=slug)
     return render(request, 'restaurants/visit_detail.html', {'visit': visit, 'dishes': visit.dishes.all()})
+
+
+@staff_member_required
+def edit_visit(request, slug=None):
+    visit = get_object_or_404(RestaurantVisit, slug=slug) if slug else None
+    post = (request.POST, request.FILES) if request.method == "POST" else ()
+    form = VisitForm(*post, instance=visit)
+    # Dishes are edited once the visit exists; a new visit starts from its photos
+    formset = None
+    if visit:
+        # The blank row for a dish without a photo goes after the last one
+        next_order = (visit.dishes.aggregate(Max('order'))['order__max'] or 0) + 1
+        formset = DishFormSet(*post, instance=visit, prefix='dishes', initial=[{'order': next_order}])
+    if post and form.is_valid() and (formset is None or formset.is_valid()):
+        with transaction.atomic():
+            visit = form.save()
+            if formset is not None:
+                formset.save()
+            added = visit.add_dish_photos(form.sorted_dish_photos())
+        if added:
+            # Back to the form so the new "Plat N" dishes can be named
+            messages.success(request, f"S'han afegit {added} plat{'s' if added != 1 else ''}. Posa'ls nom i desa.")
+            return redirect('visit_edit', visit.slug)
+        return redirect(visit)
+    return render(request, 'restaurants/visit_form.html', {'form': form, 'formset': formset, 'visit': visit})

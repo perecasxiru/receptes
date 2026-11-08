@@ -31,7 +31,7 @@
         {% empty %}
             <div class="col-12 w-100 text-center py-5">
                 <p class="serif fs-4 mb-1">Encara no hi ha cap menú</p>
-                {% if user.is_staff %}<a href="{% url 'admin:receptes_app_menu_add' %}">Crear-ne un</a>{% endif %}
+                {% if user.is_staff %}<a href="{% url 'menu_create' %}">Crear-ne un</a>{% endif %}
             </div>
         {% endfor %}
     </div>

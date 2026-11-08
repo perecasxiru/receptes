@@ -1,0 +1,23 @@
+<script>
+    function slugify(string) {
+        return string
+            .toLowerCase()
+            .normalize('NFD').replace(/[̀-ͯ]/g, '')  // Strip accents (à -> a), like Django's slugify
+            .trim()
+            .replace(/[^a-z0-9\s-]/g, '')   // Remove special characters
+            .replace(/[\s-]+/g, '-')       // Replace spaces and multiple hyphens with a single hyphen
+            .replace(/^-+|-+$/g, '');      // Remove leading and trailing hyphens
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const nameField = document.querySelector('input[name="name"]');
+        const slugField = document.querySelector('input[name="slug"]');
+
+        // Only auto-fill the slug for new items: changing it later would break existing links
+        if (nameField && slugField && !slugField.value) {
+            nameField.addEventListener('input', () => {
+                slugField.value = slugify(nameField.value);
+            });
+        }
+    });
+</script>

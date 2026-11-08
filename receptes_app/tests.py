@@ -367,3 +367,116 @@ class ProxyTests(TestCase):
             response = self.client.get(recipe.get_absolute_url(), HTTP_HOST='receptes.example',
                                        HTTP_X_FORWARDED_PROTO='https')
         self.assertContains(response, 'content="https://receptes.example/media/')
+
+
+@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+class SiteFormTests(TestCase):
+    """Staff pages for creating and editing menus and restaurant visits."""
+    def setUp(self):
+        self.recipe = Recipe.objects.create(name="Canelons")
+        self.visit = RestaurantVisit.objects.create(name="Can Jubany", date=datetime.date(2026, 11, 6))
+        self.dish = Dish.objects.create(visit=self.visit, name="Plat 1", order=1, image=make_image())
+
+    def login(self):
+        self.client.force_login(User.objects.create_superuser("admin", "a@a.a", "pass"))
+
+    def dish_data(self, **changes):
+        data = {
+            'dishes-TOTAL_FORMS': 2, 'dishes-INITIAL_FORMS': 1, 'dishes-MIN_NUM_FORMS': 0, 'dishes-MAX_NUM_FORMS': 1000,
+            'dishes-0-id': self.dish.pk, 'dishes-0-visit': self.visit.pk, 'dishes-0-order': 1,
+            'dishes-0-name': "Plat 1", 'dishes-0-notes': '',
+            'dishes-1-visit': self.visit.pk, 'dishes-1-order': 2, 'dishes-1-name': '', 'dishes-1-notes': '',
+        }
+        data.update(changes)
+        return data
+
+    def visit_data(self, **changes):
+        data = {'name': "Can Jubany", 'slug': self.visit.slug, 'date': '2026-11-06', 'city': "Calldetenes"}
+        data.update(changes)
+        return data
+
+    def test_pages_require_staff(self):
+        for url in (reverse('menu_create'), reverse('visit_create'), reverse('visit_edit', args=[self.visit.slug])):
+            self.assertEqual(self.client.get(url).status_code, 302)
+        self.assertNotContains(self.client.get(reverse('visit_list')), reverse('visit_create'))
+
+    def test_nav_offers_create_for_the_section(self):
+        self.login()
+        menus = self.client.get(reverse('menu_list'))
+        self.assertContains(menus, reverse('menu_create'))
+        self.assertContains(menus, reverse('recipe_create'))
+        self.assertNotContains(menus, reverse('visit_create'))
+        self.assertContains(self.client.get(self.visit.get_absolute_url()), reverse('visit_create'))
+        self.assertNotContains(self.client.get(reverse('recipe_list')), reverse('menu_create'))
+
+    def test_create_and_edit_menu(self):
+        self.login()
+        response = self.client.post(reverse('menu_create'), {
+            'name': "Sopar de Nadal", 'date': '2026-12-24', 'recipes': [self.recipe.pk]})
+        menu = Menu.objects.get(slug="sopar-de-nadal")
+        self.assertRedirects(response, menu.get_absolute_url())
+        self.assertEqual(list(menu.recipes.all()), [self.recipe])
+        self.assertContains(self.client.get(menu.get_absolute_url()), reverse('menu_edit', args=[menu.slug]))
+
+        url = reverse('menu_edit', args=[menu.slug])
+        self.assertContains(self.client.get(url), 'value="2026-12-24"')
+        self.client.post(url, {'name': "Sopar de Nadal", 'slug': menu.slug, 'date': '2026-12-25', 'recipes': []})
+        menu.refresh_from_db()
+        self.assertEqual((menu.date, menu.recipes.count()), (datetime.date(2026, 12, 25), 0))
+
+    def test_reserved_slug(self):
+        self.login()
+        response = self.client.post(reverse('menu_create'), {'name': "Nou", 'slug': 'nou', 'date': '2026-12-24'})
+        self.assertContains(response, "reservat")
+        # Left empty, the slug is generated around the reserved word
+        self.assertEqual(Menu.objects.create(name="Nou", date=datetime.date(2026, 1, 1)).slug, "nou-2")
+
+    def test_create_visit_with_photos_goes_to_naming(self):
+        self.login()
+        response = self.client.post(reverse('visit_create'), {
+            'name': "Disfrutar", 'date': '2026-10-04', 'dish_photos': [make_image(), make_image()]})
+        visit = RestaurantVisit.objects.get(slug="disfrutar")
+        self.assertRedirects(response, reverse('visit_edit', args=[visit.slug]), fetch_redirect_response=False)
+        self.assertEqual([d.name for d in visit.dishes.all()], ["Plat 1", "Plat 2"])
+        self.assertContains(self.client.get(reverse('visit_edit', args=[visit.slug])), "S&#x27;han afegit 2 plats")
+
+    def test_create_visit_without_photos_shows_it(self):
+        self.login()
+        response = self.client.post(reverse('visit_create'), {'name': "Disfrutar", 'date': '2026-10-04'})
+        self.assertRedirects(response, RestaurantVisit.objects.get(slug="disfrutar").get_absolute_url())
+
+    def test_edit_visit_renames_adds_and_deletes_dishes(self):
+        self.login()
+        url = reverse('visit_edit', args=[self.visit.slug])
+        page = self.client.get(url)
+        self.assertContains(page, 'value="Plat 1"')
+        self.assertContains(page, 'name="dishes-1-order" value="2"')  # Blank row goes after the last dish
+
+        # Saving without touching the blank row doesn't add a dish
+        self.assertRedirects(self.client.post(url, self.visit_data(**self.dish_data())), self.visit.get_absolute_url())
+        self.assertEqual(self.visit.dishes.count(), 1)
+
+        response = self.client.post(url, self.visit_data(**self.dish_data(**{
+            'dishes-0-name': "Olives", 'dishes-1-name': "Pa i oli", 'dishes-1-order': 2})))
+        self.assertRedirects(response, self.visit.get_absolute_url())
+        self.assertEqual([d.name for d in self.visit.dishes.all()], ["Olives", "Pa i oli"])
+        self.assertTrue(os.path.exists(self.dish.image.path))  # Renaming keeps the photo
+
+        path = self.dish.image.path
+        pa = self.visit.dishes.get(name="Pa i oli")
+        data = self.visit_data(**self.dish_data(**{
+            'dishes-TOTAL_FORMS': 2, 'dishes-INITIAL_FORMS': 2, 'dishes-0-name': "Olives", 'dishes-0-DELETE': 'on',
+            'dishes-1-id': pa.pk, 'dishes-1-name': "Pa i oli", 'dishes-1-order': 2}))
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(url, data)
+        self.assertEqual([d.name for d in self.visit.dishes.all()], ["Pa i oli"])
+        self.assertFalse(os.path.exists(path))
+
+    def test_edit_visit_shows_dish_errors(self):
+        self.login()
+        response = self.client.post(reverse('visit_edit', args=[self.visit.slug]),
+                                    self.visit_data(**self.dish_data(**{'dishes-0-name': ''})))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Revisa els camps marcats")
+        self.assertEqual(self.visit.dishes.get().name, "Plat 1")
+

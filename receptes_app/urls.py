@@ -1,8 +1,8 @@
 from django.urls import path
 from .views import (
     get_recipe_list, get_recipe_detail, create_recipe, edit_recipe,
-    get_menu_list, get_menu_detail,
-    get_visit_list, get_visit_detail,
+    get_menu_list, get_menu_detail, edit_menu,
+    get_visit_list, get_visit_detail, edit_visit,
 )
 
 urlpatterns = [
@@ -14,9 +14,13 @@ urlpatterns = [
 
     # Menus
     path('menus/', get_menu_list, name='menu_list'),
+    path('menus/nou/', edit_menu, name='menu_create'),
     path('menus/<slug:slug>/', get_menu_detail, name='menu_detail'),
+    path('menus/<slug:slug>/editar/', edit_menu, name='menu_edit'),
 
     # Restaurants
     path('restaurants/', get_visit_list, name='visit_list'),
+    path('restaurants/nou/', edit_visit, name='visit_create'),
     path('restaurants/<slug:slug>/', get_visit_detail, name='visit_detail'),
+    path('restaurants/<slug:slug>/editar/', edit_visit, name='visit_edit'),
 ]

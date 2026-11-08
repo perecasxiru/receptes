@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}{% if visit %}Editar {{ visit.name }}{% else %}Nou restaurant{% endif %} · Restaurants{% endblock %}
+
+{% block head %}
+    {% include "forms/_styles.html" %}
+    <style>
+        /* One row per dish: photo, order, name and notes, photo upload, delete */
+        .dish-row {
+            display: grid; grid-template-columns: 72px 4.5rem minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+            gap: .75rem; align-items: center; padding: .75rem 0; border-top: 1px dashed var(--line);
+        }
+        .dish-row:first-of-type { border-top: 0; padding-top: 0; }
+        .dish-row.is-new { border-top-style: solid; }
+        .dish-thumb { width: 72px; height: 72px; border-radius: 10px; object-fit: cover; display: block; }
+        .dish-thumb-empty {
+            display: flex; align-items: center; justify-content: center;
+            background: var(--accent-soft); color: var(--accent-ink); font-size: 1.4rem;
+        }
+        .dish-fields { display: flex; flex-direction: column; gap: .4rem; }
+        .dish-delete { display: flex; align-items: center; gap: .35rem; font-size: .85rem; color: var(--muted); cursor: pointer; white-space: nowrap; }
+        .dish-delete input { accent-color: var(--accent); }
+        .dish-row:has(.dish-delete input:checked) > :not(.dish-delete) { opacity: .35; }
+        @media (max-width: 767.98px) {
+            .dish-row { grid-template-columns: 64px 4rem minmax(0, 1fr); }
+            .dish-thumb { width: 64px; height: 64px; }
+            .dish-row .dish-notes-cell, .dish-row .dish-photo-input, .dish-row .dish-delete { grid-column: 1 / -1; }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    {% if visit %}
+        <a href="{{ visit.get_absolute_url }}" class="text-body-secondary text-decoration-none small">← {{ visit.name }}</a>
+        <h1 class="mt-3 mb-4">Editar restaurant</h1>
+    {% else %}
+        <a href="{% url 'visit_list' %}" class="text-body-secondary text-decoration-none small">← Tots els restaurants</a>
+        <h1 class="mt-3 mb-4">Nou restaurant</h1>
+    {% endif %}
+
+    {% include "forms/_errors.html" %}
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <section class="panel mb-4">
+            <div class="row">
+                {% include "forms/_field.html" with f=form.name col="col-md-6" %}
+                {% include "forms/_field.html" with f=form.slug col="col-md-3" %}
+                {% include "forms/_field.html" with f=form.date col="col-md-3" %}
+                {% include "forms/_field.html" with f=form.city col="col-md-4" %}
+                {% include "forms/_field.html" with f=form.menu_name col="col-md-8" %}
+                {% include "forms/_field.html" with f=form.link %}
+                {% include "forms/_field.html" with f=form.notes %}
+                {% include "forms/_field.html" with f=form.image col="col-md-6" %}
+                {% include "forms/_field.html" with f=form.menu_photo col="col-md-6" %}
+            </div>
+        </section>
+
+        <section class="panel mb-4">
+            <h2>Plats</h2>
+            {% if formset %}
+                {{ formset.management_form }}
+                {% for error in formset.non_form_errors %}
+                    <div class="alert alert-danger">{{ error }}</div>
+                {% endfor %}
+                {% for dish_form in formset %}
+                    {% with dish=dish_form.instance %}
+                        <div class="dish-row{% if not dish.pk %} is-new{% endif %}">
+                            {% for hidden in dish_form.hidden_fields %}{{ hidden }}{% endfor %}
+                            {% if dish.image %}
+                                <a href="{% if dish.image_large %}{{ dish.image_large.url }}{% else %}{{ dish.image.url }}{% endif %}" target="_blank"><img src="{{ dish.image.url }}" alt="" class="dish-thumb" loading="lazy"></a>
+                            {% else %}
+                                <div class="dish-thumb dish-thumb-empty" aria-hidden="true">{% if dish.pk %}—{% else %}+{% endif %}</div>
+                            {% endif %}
+                            <div>{{ dish_form.order }}</div>
+                            <div class="dish-fields">
+                                {{ dish_form.name }}
+                                {% if not dish.pk %}<div class="form-text mt-0">Afegeix un plat sense foto (o deixa-ho en blanc)</div>{% endif %}
+                                {% for error in dish_form.name.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="dish-fields dish-notes-cell">
+                                {{ dish_form.notes }}
+                            </div>
+                            <div class="dish-photo-input dish-fields">
+                                {{ dish_form.image }}
+                                {% for error in dish_form.image.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                            </div>
+                            {% if dish.pk %}
+                                <label class="dish-delete">{{ dish_form.DELETE }} Esborrar</label>
+                            {% else %}
+                                <span class="dish-delete invisible" aria-hidden="true"><input type="checkbox" disabled> Esborrar</span>
+                            {% endif %}
+                        </div>
+                    {% endwith %}
+                {% endfor %}
+                <hr class="my-4">
+            {% endif %}
+            <div class="row">
+                {% include "forms/_field.html" with f=form.dish_photos %}
+            </div>
+        </section>
+
+        <button type="submit" class="btn btn-accent px-4">Desar</button>
+        <a href="{% if visit %}{{ visit.get_absolute_url }}{% else %}{% url 'visit_list' %}{% endif %}" class="btn btn-link text-body-secondary">Cancel·lar</a>
+    </form>
+{% endblock %}
+
+{% block scripts %}
+    {% include "forms/_slug_script.html" %}
+{% endblock %}

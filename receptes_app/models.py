@@ -29,6 +29,9 @@ def resize_image(image_file, max_size=(800, 800)):
     img.save(buffer, format='JPEG', quality=85)
     return ContentFile(buffer.getvalue())
 
+# Used by the "create" pages (menus/nou/, restaurants/nou/), so no object may take them
+RESERVED_SLUGS = {'nou'}
+
 def generate_unique_slug(instance, model_class, field_name='slug'):
     """
     Generates a unique slug for the given instance.
@@ -37,7 +40,7 @@ def generate_unique_slug(instance, model_class, field_name='slug'):
     base_slug = slugify(getattr(instance, 'name', ''))[:max_length - 4] or 'item'
     slug = base_slug
     counter = 2
-    while model_class.objects.filter(**{field_name: slug}).exclude(pk=instance.pk).exists():
+    while slug in RESERVED_SLUGS or model_class.objects.filter(**{field_name: slug}).exclude(pk=instance.pk).exists():
         slug = f"{base_slug}-{counter}"
         counter += 1
     return slug
@@ -232,6 +235,14 @@ class RestaurantVisit(models.Model, ResizableImageMixin):
         """Cover photo first, then dish photos; prefetch 'dishes' in list views."""
         photos = [self.image] if self.image else []
         return photos + [dish.image for dish in self.dishes.all() if dish.image]
+
+    def add_dish_photos(self, photos):
+        """Turn each photo into a dish named "Plat N", appended after the existing ones."""
+        last_order = self.dishes.aggregate(models.Max('order'))['order__max'] or 0
+        count = self.dishes.count()
+        for i, photo in enumerate(photos, start=1):
+            Dish.objects.create(visit=self, name=f"Plat {count + i}", order=last_order + i, image=photo)
+        return len(photos)
 
     def save(self, *args, **kwargs):
         if not self.slug:

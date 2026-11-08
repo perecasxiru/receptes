@@ -1,0 +1,6 @@
+{% if form.errors or formset.total_error_count %}
+    <div class="alert alert-danger">Revisa els camps marcats.</div>
+{% endif %}
+{% for error in form.non_field_errors %}
+    <div class="alert alert-danger">{{ error }}</div>
+{% endfor %}

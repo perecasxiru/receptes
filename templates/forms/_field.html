@@ -1,0 +1,8 @@
+<div class="{{ col|default:'col-12' }} mb-4{% if chips %} checks{% endif %}">
+    <label class="field-label mb-2 d-block" for="{{ f.id_for_label }}">{{ f.label }}{% if f.field.required %} <span class="text-body-secondary fw-normal">*</span>{% endif %}</label>
+    {{ f }}
+    {% if f.help_text %}<div class="form-text">{{ f.help_text }}</div>{% endif %}
+    {% for error in f.errors %}
+        <div class="invalid-feedback d-block">{{ error }}</div>
+    {% endfor %}
+</div>

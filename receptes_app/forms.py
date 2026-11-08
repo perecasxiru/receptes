@@ -1,7 +1,8 @@
 from django import forms
+from django.forms import inlineformset_factory
 from PIL import Image
 
-from .models import Recipe, RestaurantVisit, Tag, Tool
+from .models import RESERVED_SLUGS, Dish, Menu, Recipe, RestaurantVisit, Tag, Tool
 
 
 class RecipeForm(forms.ModelForm):
@@ -110,3 +111,69 @@ class RestaurantVisitAdminForm(forms.ModelForm):
         # Photos without a date keep their upload order, after the dated ones
         keyed = [(taken_at(photo), i, photo) for i, photo in enumerate(photos)]
         return [photo for date, i, photo in sorted(keyed, key=lambda k: (k[0] is None, k[0] or '', k[1]))]
+
+
+# -------------------------------
+# Site forms for menus and restaurant visits (staff only)
+# -------------------------------
+
+def text(**attrs):
+    return forms.TextInput(attrs={'class': 'form-control', **attrs})
+
+def textarea(rows=4, **attrs):
+    return forms.Textarea(attrs={'class': 'form-control', 'rows': rows, **attrs})
+
+DATE = forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%Y-%m-%d')
+IMAGE = forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*'})
+
+
+class ReservedSlugMixin:
+    def clean_slug(self):
+        slug = self.cleaned_data.get('slug')
+        if slug in RESERVED_SLUGS:
+            raise forms.ValidationError("Aquest slug està reservat; tria'n un altre.")
+        return slug
+
+
+class MenuForm(ReservedSlugMixin, forms.ModelForm):
+    recipes = forms.ModelMultipleChoiceField(
+        label="Receptes", queryset=Recipe.objects.order_by('name'),
+        widget=forms.CheckboxSelectMultiple, required=False)
+
+    class Meta:
+        model = Menu
+        fields = ['name', 'slug', 'date', 'description', 'recipes']
+        labels = {'name': "Nom", 'slug': "Slug (URL)", 'date': "Data", 'description': "Descripció"}
+        widgets = {'name': text(), 'slug': text(), 'date': DATE, 'description': textarea()}
+
+
+class VisitForm(ReservedSlugMixin, RestaurantVisitAdminForm):
+    class Meta:
+        model = RestaurantVisit
+        fields = ['name', 'slug', 'city', 'date', 'menu_name', 'link', 'notes', 'image', 'menu_photo']
+        labels = {'name': "Restaurant", 'slug': "Slug (URL)", 'city': "Ciutat", 'link': "Web"}
+        widgets = {
+            'name': text(), 'slug': text(), 'city': text(), 'date': DATE,
+            'menu_name': text(placeholder="Menú degustació de tardor"),
+            'link': forms.URLInput(attrs={'class': 'form-control'}),
+            'notes': textarea(), 'image': IMAGE, 'menu_photo': IMAGE,
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        photos = self.fields['dish_photos']
+        photos.label = "Afegir plats a partir de fotos"
+        photos.widget.attrs['class'] = 'form-control'
+
+
+DishFormSet = inlineformset_factory(
+    RestaurantVisit, Dish, fields=['order', 'name', 'notes', 'image'], extra=1, can_delete=True,
+    labels={'order': "Ordre", 'name': "Plat", 'notes': "Notes", 'image': "Foto"},
+    widgets={
+        'order': forms.NumberInput(attrs={'class': 'form-control form-control-sm', 'min': 0}),
+        'name': text(),
+        'notes': textarea(rows=1, placeholder="Notes (opcional)"),
+        # Plain input: a dish's photo is replaced, or the dish deleted, so no "clear" checkbox
+        'image': forms.FileInput(attrs={'class': 'form-control form-control-sm', 'accept': 'image/*'}),
+    },
+)

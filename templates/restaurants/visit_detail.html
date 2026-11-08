@@ -90,7 +90,7 @@
         <div class="d-flex flex-wrap align-items-center gap-3">
             {% if visit.link %}<a href="{{ visit.link }}" target="_blank" rel="noopener noreferrer">Web del restaurant ↗</a>{% endif %}
             {% if user.is_staff %}
-                <a href="{% url 'admin:receptes_app_restaurantvisit_change' visit.pk %}" class="btn btn-soft btn-sm">Editar</a>
+                <a href="{% url 'visit_edit' visit.slug %}" class="btn btn-soft btn-sm">Editar</a>
             {% endif %}
         </div>
     </header>

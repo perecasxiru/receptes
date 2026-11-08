@@ -1,5 +1,4 @@
 from django.contrib import admin, messages
-from django.db.models import Max
 from django.shortcuts import redirect
 from django.utils.html import format_html
 from .forms import RestaurantVisitAdminForm
@@ -114,13 +113,7 @@ class RestaurantVisitAdmin(admin.ModelAdmin):
     def save_related(self, request, form, formsets, change):
         super().save_related(request, form, formsets, change)
         # Each bulk-uploaded photo becomes a dish, appended after the existing ones
-        visit = form.instance
-        photos = form.sorted_dish_photos()
-        last_order = visit.dishes.aggregate(Max('order'))['order__max'] or 0
-        count = visit.dishes.count()
-        for i, photo in enumerate(photos, start=1):
-            Dish.objects.create(visit=visit, name=f"Plat {count + i}", order=last_order + i, image=photo)
-        request.bulk_dishes_added = len(photos)
+        request.bulk_dishes_added = form.instance.add_dish_photos(form.sorted_dish_photos())
 
     def _name_new_dishes(self, request, obj):
         added = getattr(request, 'bulk_dishes_added', 0)

@@ -10,7 +10,7 @@
         <h1 class="mb-3" style="font-size: clamp(2rem, 5vw, 3.2rem)">{{ menu.name }}</h1>
         {% if menu.description %}<div class="text-body-secondary" style="max-width: 720px">{{ menu.description|urlize|linebreaks }}</div>{% endif %}
         {% if user.is_staff %}
-            <a href="{% url 'admin:receptes_app_menu_change' menu.pk %}" class="btn btn-soft btn-sm mt-2">Editar</a>
+            <a href="{% url 'menu_edit' menu.slug %}" class="btn btn-soft btn-sm mt-2">Editar</a>
         {% endif %}
     </header>
 
