@@ -1,9 +1,12 @@
-<!DOCTYPE html>
+{% load static %}<!DOCTYPE html>
 <html lang="ca">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Receptes{% endblock %}</title>
+    <link rel="icon" href="{% static 'favicon.ico' %}" sizes="48x48">
+    <link rel="icon" href="{% static 'favicon-192.png' %}" type="image/png" sizes="192x192">
+    <link rel="apple-touch-icon" href="{% static 'apple-touch-icon.png' %}">
     <script>
         // Apply the saved theme before anything renders to avoid a flash of the wrong colours
         (() => {
