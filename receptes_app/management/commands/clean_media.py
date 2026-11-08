@@ -18,10 +18,11 @@ class Command(BaseCommand):
             self.stdout.write("No uploads directory.")
             return
 
-        used = set(Recipe.objects.exclude(image='').values_list('image', flat=True))
-        for model in (Make, RestaurantVisit, Dish):
-            used |= set(model.objects.exclude(image='').values_list('image', flat=True))
-        used |= set(RestaurantVisit.objects.exclude(menu_photo='').values_list('menu_photo', flat=True))
+        # Every model lists its image fields, so new ones are covered automatically
+        used = set()
+        for model in (Recipe, Make, RestaurantVisit, Dish):
+            for field in model.image_fields:
+                used |= set(model.objects.exclude(**{field: ''}).values_list(field, flat=True))
 
         # Rich text may embed uploaded images too; keep anything mentioned there
         rich_text = ' '.join(

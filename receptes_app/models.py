@@ -245,7 +245,11 @@ class Dish(models.Model, ResizableImageMixin):
     name = models.CharField("plat", max_length=150)
     notes = models.TextField("notes", blank=True, default='')
     image = models.ImageField("foto", upload_to=random_file_name, null=True, blank=True)
+    # Sharper copy for the full-screen viewer, made from each new upload; the grid keeps the small one
+    image_large = models.ImageField(upload_to=random_file_name, null=True, blank=True, editable=False)
     order = models.PositiveSmallIntegerField("ordre", default=0)
+
+    image_fields = {'image': (800, 800), 'image_large': (1800, 1800)}
 
     class Meta:
         ordering = ['order', 'pk']
@@ -257,6 +261,13 @@ class Dish(models.Model, ResizableImageMixin):
 
     def save(self, *args, **kwargs):
         self.notes = (self.notes or '').strip()
+        if self.image and not self.image._committed:
+            self.image.open()
+            data = self.image.read()
+            self.image.seek(0)
+            self.image_large = ContentFile(data, name=os.path.basename(self.image.name))
+        elif not self.image:
+            self.image_large = None
         self.save_with_image(*args, **kwargs)
 
 

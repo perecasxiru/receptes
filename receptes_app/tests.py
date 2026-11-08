@@ -84,6 +84,8 @@ class RecipeModelTests(TestCase):
 
     def test_clean_media_keeps_used_files(self):
         recipe = Recipe.objects.create(name="Usada", image=make_image())
+        visit = RestaurantVisit.objects.create(name="Fora", date=datetime.date(2026, 10, 4))
+        dish = Dish.objects.create(visit=visit, name="Plat", image=make_image())
         orphan = os.path.join(MEDIA_ROOT, 'uploads', 'orphan.jpg')
         with open(orphan, 'wb') as f:
             f.write(b'x')
@@ -96,6 +98,7 @@ class RecipeModelTests(TestCase):
         call_command('clean_media', '--delete', stdout=StringIO())
         self.assertFalse(os.path.exists(orphan))
         self.assertTrue(os.path.exists(recipe.image.path))
+        self.assertTrue(os.path.exists(dish.image_large.path))  # The viewer's copy counts as used
 
 
 class RecipeViewTests(TestCase):
@@ -238,6 +241,33 @@ class RestaurantTests(TestCase):
         with self.captureOnCommitCallbacks(execute=True):
             self.visit.delete()
         self.assertFalse(os.path.exists(path))
+
+    def test_dish_keeps_large_copy_for_viewer(self):
+        dish = Dish.objects.create(visit=self.visit, name="Gran", order=3, image=make_image(size=(4000, 3000)))
+        with Image.open(dish.image.path) as img:
+            self.assertEqual(img.size, (800, 600))
+        with Image.open(dish.image_large.path) as img:
+            self.assertEqual(img.size, (1800, 1350))
+        # The grid shows the small file; the viewer link points at the large one
+        response = self.client.get(self.visit.get_absolute_url())
+        self.assertContains(response, f'src="{dish.image.url}"')
+        self.assertContains(response, f'href="{dish.image_large.url}"')
+
+        # Clearing the photo drops both files
+        small, large = dish.image.path, dish.image_large.path
+        dish.image = None
+        with self.captureOnCommitCallbacks(execute=True):
+            dish.save()
+        self.assertIsNone(dish.image_large.name)
+        self.assertFalse(os.path.exists(small) or os.path.exists(large))
+
+        # Deleting the dish removes both too
+        dish.image = make_image()
+        dish.save()
+        small, large = dish.image.path, dish.image_large.path
+        with self.captureOnCommitCallbacks(execute=True):
+            dish.delete()
+        self.assertFalse(os.path.exists(small) or os.path.exists(large))
 
     def test_bulk_dish_photos_in_admin(self):
         def photo(name, colour, taken=None):
